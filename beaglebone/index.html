@@ -10,7 +10,7 @@
 <script type="text/javascript">
   var socket = io.connect(document.URL);
   function onLoad() {
-    var speed 5;
+    var speed = 5;
     document.getElementById('speed').innerHTML = speed;
     document.addEventListener('keydown', function(event) {
       if(event.keyCode == 87) {  // 'W'
@@ -25,7 +25,7 @@
       else if(event.keyCode == 68) {  // 'D'
         socket.emit('move', {id:'m', dir:'r', spd:speed});
       }
-      else if(event.keyCode == 32) {  // 'D'
+      else if(event.keyCode == 32) {  // Space bar
         socket.emit('move', {id:'m', dir:'s', spd:speed});
       }
       else if(event.keyCode == 88) { // 'X'
@@ -39,6 +39,12 @@
           speed -= 1;
         }
         document.getElementById('speed').innerHTML = speed.toString();
+      }
+    });
+    document.addEventListener('keyup', function(event) {
+      var k = event.keyCode;
+      if(k == 87 || k == 65 || k == 83 || k == 68) {  // 'W'
+        socket.emit('move', {id:'m', dir:'s', spd:0});
       }
     });
     document.getElementById('LED1').onclick = function(){socket.emit('led', { id:'l', num: 1 } );};
