@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-#include <time.h>
-
+#include <sys/time.h>
+#include "cv.h"
+#include "highgui.h"
 
 IplImage* GetThresholdedImage(IplImage* img) {
   // Convert the image into an HSV image
@@ -28,10 +27,13 @@ int main( int argc, char **argv){
   CvMemStorage* storage = cvCreateMemStorage(0);
   CvSeq* contour = 0;
   CvMoments moments;
+  timeval stop2, start2;
   int       key = 0;
 
     /* initialize camera */
-  capture = cvCaptureFromCAM(0);
+  time(&start);
+  gettimeofday(&start2, NULL);
+  capture = cvCreateCameraCapture(0);
   cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 160);
   cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 120);
   cvSetCaptureProperty(capture, CV_CAP_PROP_FPS, 5);
@@ -42,10 +44,11 @@ int main( int argc, char **argv){
   }
 
     /* create a window for the video */
-  cvNamedWindow( "result", CV_WINDOW_AUTOSIZE );
+  cv::namedWindow( "result", CV_WINDOW_AUTOSIZE );
+  gettimeofday(&stop2, NULL);
+  printf("took %lu\n", stop2.tv_usec - start2.tv_usec);
   cvNamedWindow( "unfiltered", CV_WINDOW_AUTOSIZE );
 
-  time(&start);
   int counter=0;
 
 
@@ -91,31 +94,3 @@ int main( int argc, char **argv){
 
   return 0;
 }
-
-// #include "opencv/cv.h"
-// #include "opencv/highgui.h"
-// #include <iostream>
-
-// int main(int, char**) {
-//     cv::VideoCapture vcap;
-//     cv::Mat image;
-
-//     const std::string videoStreamAddress = "http://localhost:8080/?action=snapshot";
-//     /* it may be an address of an mjpeg stream,
-//     e.g. "http://user:pass@cam_address:8081/cgi/mjpg/mjpg.cgi?.mjpg" */
-
-//     //open the video stream and make sure it's opened
-//     if(!vcap.open(videoStreamAddress)) {
-//         std::cout << "Error opening video stream or file" << std::endl;
-//         return -1;
-//     }
-
-//     for(;;) {
-//         if(!vcap.read(image)) {
-//             std::cout << "No frame" << std::endl;
-//             cv::waitKey();
-//         }
-//         cv::imshow("Output Window", image);
-//         if(cv::waitKey(1) >= 0) break;
-//     }
-// }
