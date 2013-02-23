@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>Websockets!</title>
+</head>
+
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+  var socket = io.connect(document.URL);
+  function onLoad() {
+    document.getElementById('LED1').onclick = function(){socket.emit('led', { num: '1' } );};
+    document.getElementById('LED2').onclick = function(){socket.emit('led', { num: '2' } );};
+    document.getElementById('takePic').onclick = getPicture;
+    socket.on('b', function(data) {
+      buttonText = document.getElementById('buttonText');
+      if (data.val) {
+        buttonText.innerHTML = "not pressed";
+      } else {
+        buttonText.innerHTML = "pressed";
+      }
+    });
+    socket.on('ctr', function(data) {
+      document.getElementById('counterText').innerHTML = data.val.toString();
+    });
+  }
+  function getPicture(){
+    var img = new Image();
+    img.onload = function() {
+      var c=document.getElementById("pic");
+      var ctx=c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src= "/cam.png";
+  }
+</script>
+
+<body onload="onLoad();">
+  <canvas id="pic" width="400" height="400"></canvas>
+  <div>
+    <input type="button" id="takePic" value="Take a picture!">
+    <input type="button" id="LED1", value="LED1">
+    <input type="button" id="LED2", value="LED2">
+    The button is <var id="buttonText">not pressed</var>
+
+    Counter: <var id="counterText">0</var>
+  </div>
+</body>
+</html>
