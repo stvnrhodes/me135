@@ -4,32 +4,30 @@ var url = require('url');
 var cv = require('opencv');
 // var camera = new cv.VideoCapture(0);
 
-
 var serialport = require('serialport')
 var Uart = serialport.SerialPort;
-var uart;
 
 var exec = require('child_process').exec;
 
-var child = exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
-                 'echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0 ',
+exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
+     'echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0 ',
   function (error, stdout, stderr) {
     if (error !== null) {
       console.log('exec error: ' + error);
     } else {
-      uart = new Uart('/dev/ttyO4', {
+      var uart = new Uart('/dev/ttyO4', {
         baudrate: 115200,
         parser: serialport.parsers.readline("\n")
       });
       uart.on("open", function () {
         console.log('UART Open');
-        runServer()
+        runServer(uart)
       });
     }
 });
 
 
-function runServer () {
+function runServer (uart) {
   var app = require('http').createServer(handler);
   var io = require('socket.io').listen(app);
   var log = io.log;
@@ -67,12 +65,20 @@ function runServer () {
   }
 
   io.sockets.on('connection', function (socket) {
-    socket.on('led', function (data) {
+    socket.on('led', function(data) {
       log.info("Writing to LED " + data.num)
-      uart.write(data.num);
+      uart.write("l" + data.num + "\n");
+    });
+    socket.on('move', function(data) {
+      log.info("Moving " + data.dir + " at " + data.spd);
+      uart.write("d" + data.spd + data.dir + "\n");
+    });
+    socket.on('enc', function(data) {
+      log.info("Doing encoder action " + data.action);
+      uart.write("e\n")
     });
     uart.on('data', function(data) {
-      log.debug("data received: " + data);
+      log.debug("UART data received: " + data);
       try {
         data = JSON.parse(data);
         socket.emit(data.id, data);
@@ -82,16 +88,3 @@ function runServer () {
     });
   });
 }
-
-// setInterval( function() {
-//   camera.read(function(im) {
-//     im.line([0,0], [100,100])
-//     im.save('./cam.png');
-//   });
-// }, 1000);
-
-// console.log(Object.getOwnPropertyNames(camera).sort())
-// camera.set('CV_CAP_PROP_FRAME_WIDTH', 160);
-// camera.set('CV_CAP_PROP_FRAME_HEIGHT', 120);
-// camera.set('CV_CAP_PROP_FPS', 5);
-

@@ -10,9 +10,39 @@
 <script type="text/javascript">
   var socket = io.connect(document.URL);
   function onLoad() {
+    var speed = document.getElementById('speed').innerHTML
+    document.addEventListener('keydown', function(event) {
+      if(event.keyCode == 87) {  // 'W'
+        socket.emit('move', {dir:'f', spd:speed});
+      }
+      else if(event.keyCode == 65) {  // 'A'
+        socket.emit('move', {dir:'l', spd:speed});
+      }
+      else if(event.keyCode == 83) {  // 'S'
+        socket.emit('move', {dir:'b', spd:speed});
+      }
+      else if(event.keyCode == 68) {  // 'D'
+        socket.emit('move', {dir:'r', spd:speed});
+      }
+      else if(event.keyCode == 32) {  // 'D'
+        socket.emit('move', {dir:'s', spd:speed});
+      }
+      else if(event.keyCode == 88) { // 'X'
+        if (speed < 10) {
+          speed += 1;
+        }
+        document.getElementById('speed').innerHTML = speed.toString();
+      }
+      else if(event.keyCode == 90) { // 'Z'
+        if (speed > 0) {
+          speed -= 1;
+        }
+        document.getElementById('speed').innerHTML = speed.toString();
+      }
+    });
     document.getElementById('LED1').onclick = function(){socket.emit('led', { num: '1' } );};
     document.getElementById('LED2').onclick = function(){socket.emit('led', { num: '2' } );};
-    document.getElementById('takePic').onclick = getPicture;
+    document.getElementById('resetEncoder').onclick = function(){socket.emit('enc', {action: 'rst'})}
     socket.on('b', function(data) {
       buttonText = document.getElementById('buttonText');
       if (data.val) {
@@ -24,27 +54,34 @@
     socket.on('ctr', function(data) {
       document.getElementById('counterText').innerHTML = data.val.toString();
     });
-  }
-  function getPicture(){
-    var img = new Image();
-    img.onload = function() {
-      var c=document.getElementById("pic");
-      var ctx=c.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-    };
-    img.src= "/cam.png";
+    socket.on('enc', function(data) {
+      document.getElementById(data.side).innerHtml = data.val.toString();
+    });
   }
 </script>
 
-<body onload="onLoad();">
-  <canvas id="pic" width="400" height="400"></canvas>
+<body onload="onLoad()">
   <div>
-    <input type="button" id="takePic" value="Take a picture!">
-    <input type="button" id="LED1", value="LED1">
-    <input type="button" id="LED2", value="LED2">
-    The button is <var id="buttonText">not pressed</var>
-
-    Counter: <var id="counterText">0</var>
+    To control direction, use WASD. To control speed, use XZ.
+    <table border="0">
+      <tr>
+        <td>Speed(0-10):</td>
+        <td id="speed">5</td>
+      </tr>
+      <tr>
+        <td>Left Encoder Count:</td>
+        <td id="lEnc">0</td>
+      </tr>
+      <tr>
+        <td>Right Encoder Count:</td>
+        <td id="rEnc">0</td>
+    </table>
+    <input type="button" id="resetEncoder" value="Reset Encoder Count">
   </div>
+  <div>
+    <input type="button" id="LED1" value="LED1">
+    <input type="button" id="LED2" value="LED2">
+  </div>
+  <canvas id="robopath" width="200" height="100"></canvas>
 </body>
 </html>
