@@ -67,15 +67,15 @@ function runServer (uart) {
   io.sockets.on('connection', function (socket) {
     socket.on('led', function(data) {
       log.info("Writing to LED " + data.num)
-      uart.write("l" + data.num + "\n");
+      uart.write(JSON.stringify(data)+'\n');
     });
     socket.on('move', function(data) {
       log.info("Moving " + data.dir + " at " + data.spd);
-      uart.write("d" + data.spd + data.dir + "\n");
+      uart.write(JSON.stringify(data)+"\n");
     });
     socket.on('enc', function(data) {
       log.info("Doing encoder action " + data.action);
-      uart.write("e\n")
+      uart.write(JSON.stringify(data)+"\n");
     });
     uart.on('data', function(data) {
       log.debug("UART data received: " + data);

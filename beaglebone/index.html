@@ -10,22 +10,23 @@
 <script type="text/javascript">
   var socket = io.connect(document.URL);
   function onLoad() {
-    var speed = document.getElementById('speed').innerHTML
+    var speed 5;
+    document.getElementById('speed').innerHTML = speed;
     document.addEventListener('keydown', function(event) {
       if(event.keyCode == 87) {  // 'W'
-        socket.emit('move', {dir:'f', spd:speed});
+        socket.emit('move', {id:'m', dir:'f', spd:speed});
       }
       else if(event.keyCode == 65) {  // 'A'
-        socket.emit('move', {dir:'l', spd:speed});
+        socket.emit('move', {id:'m', dir:'l', spd:speed});
       }
       else if(event.keyCode == 83) {  // 'S'
-        socket.emit('move', {dir:'b', spd:speed});
+        socket.emit('move', {id:'m', dir:'b', spd:speed});
       }
       else if(event.keyCode == 68) {  // 'D'
-        socket.emit('move', {dir:'r', spd:speed});
+        socket.emit('move', {id:'m', dir:'r', spd:speed});
       }
       else if(event.keyCode == 32) {  // 'D'
-        socket.emit('move', {dir:'s', spd:speed});
+        socket.emit('move', {id:'m', dir:'s', spd:speed});
       }
       else if(event.keyCode == 88) { // 'X'
         if (speed < 10) {
@@ -40,9 +41,9 @@
         document.getElementById('speed').innerHTML = speed.toString();
       }
     });
-    document.getElementById('LED1').onclick = function(){socket.emit('led', { num: '1' } );};
-    document.getElementById('LED2').onclick = function(){socket.emit('led', { num: '2' } );};
-    document.getElementById('resetEncoder').onclick = function(){socket.emit('enc', {action: 'rst'})}
+    document.getElementById('LED1').onclick = function(){socket.emit('led', { id:'l', num: 1 } );};
+    document.getElementById('LED2').onclick = function(){socket.emit('led', { id:'l', num: 2 } );};
+    document.getElementById('resetEncoder').onclick = function(){socket.emit('enc', {id:'e', action: 'rst'})}
     socket.on('b', function(data) {
       buttonText = document.getElementById('buttonText');
       if (data.val) {
@@ -55,7 +56,7 @@
       document.getElementById('counterText').innerHTML = data.val.toString();
     });
     socket.on('enc', function(data) {
-      document.getElementById(data.side).innerHtml = data.val.toString();
+      document.getElementById(data.side).innerHTML = data.val.toString();
     });
   }
 </script>
@@ -66,7 +67,7 @@
     <table border="0">
       <tr>
         <td>Speed(0-10):</td>
-        <td id="speed">5</td>
+        <td id="speed">0</td>
       </tr>
       <tr>
         <td>Left Encoder Count:</td>
