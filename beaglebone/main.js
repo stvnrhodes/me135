@@ -1,13 +1,26 @@
 var fs = require('fs');
 var url = require('url');
 
-var cv = require('opencv');
+var cv = require('./cv.js');
 // var camera = new cv.VideoCapture(0);
 
 var serialport = require('serialport')
 var Uart = serialport.SerialPort;
 
 var exec = require('child_process').exec;
+
+var capture = cv.CreateCameraCapture(0);
+cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_WIDTH, 320);
+cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_HEIGHT, 240);
+cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FPS, 5);
+cv.NamedWindow("Hello World");
+console.log("Camera is up");
+var takePicture = function() {
+  cv.QueryFrame.async(capture, function (err, frame) {
+    cv.ShowImage("Hello World", frame);
+  });
+}
+setInterval(takePicture, 100);
 
 exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
      'echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0 ',
@@ -26,7 +39,6 @@ exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
     }
 });
 
-
 function runServer (uart) {
   var app = require('http').createServer(handler);
   var io = require('socket.io').listen(app);
@@ -39,15 +51,13 @@ function runServer (uart) {
     var request = url.parse(req.url, true);
     var action = request.pathname;
     if (action == '/cam.png') {
-      camera.read(function(im) {
-        im.line([0,0], [100,100])
-        im.save('./cam.png');
-        fs.readFile('./cam.png',
-          function(err, img) {
+      cv.QueryFrame.async(capture, function (err, frame) {
+        cv.SaveImage.async('./cam.png', frame, function(err) {
+          fs.readFile('./cam.png', function(err, img) {
             res.writeHead(200, {'Content-Type': 'image/png' });
             res.end(img, 'binary');
-          }
-        );
+          });
+        });
       });
     } else {
       fs.readFile(__dirname + '/index.html',
