@@ -1,7 +1,7 @@
 var fs = require('fs');
 var url = require('url');
 
-var cv = require('./cv.js');
+var cv = require('cv');
 // var camera = new cv.VideoCapture(0);
 
 var serialport = require('serialport')
@@ -10,17 +10,15 @@ var Uart = serialport.SerialPort;
 var exec = require('child_process').exec;
 
 var capture = cv.CreateCameraCapture(0);
-cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_WIDTH, 320);
-cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_HEIGHT, 240);
+cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_WIDTH, 160);
+cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_HEIGHT, 120);
 cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FPS, 5);
-cv.NamedWindow("Hello World");
+// cv.NamedWindow("Hello World");
 console.log("Camera is up");
 var takePicture = function() {
-  cv.QueryFrame.async(capture, function (err, frame) {
-    cv.ShowImage("Hello World", frame);
-  });
+  cv.QueryFrame.async(capture, function(){});
 }
-setInterval(takePicture, 100);
+setInterval(takePicture, 200);
 
 exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
      'echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0 ',
@@ -91,8 +89,8 @@ function runServer (uart) {
     uart.on('data', function(data) {
       log.debug("UART data received: " + data);
       try {
-        data = JSON.parse(data);
-        socket.emit(data.id, data);
+        data = data.split(',');
+        socket.emit(data[0], data);
       } catch(e) {
         log.warn(e);
       }

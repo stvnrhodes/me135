@@ -47,8 +47,13 @@
         socket.emit('move', {id:'m', dir:'s', spd:0});
       }
     });
-    document.getElementById('LED1').onclick = function(){socket.emit('led', { id:'l', num: 1 } );};
-    document.getElementById('LED2').onclick = function(){socket.emit('led', { id:'l', num: 2 } );};
+    document.getElementById('Cam').onclick = function() {};
+    document.getElementById('LED1').onclick = function() {
+      socket.emit('led', { id:'l', num: 1 } );
+    };
+    document.getElementById('LED2').onclick = function() {
+      socket.emit('led', { id:'l', num: 2 } );
+    };
     document.getElementById('resetEncoder').onclick = function(){socket.emit('enc', {id:'e', action: 'rst'})}
     socket.on('b', function(data) {
       buttonText = document.getElementById('buttonText');
@@ -61,8 +66,9 @@
     socket.on('ctr', function(data) {
       document.getElementById('counterText').innerHTML = data.val.toString();
     });
-    socket.on('enc', function(data) {
-      document.getElementById(data.side).innerHTML = data.val.toString();
+    socket.on('e', function(data) {
+      document.getElementById('lEnc').innerHTML = data[1];
+      document.getElementById('rEnc').innerHTML = data[2];
     });
   }
 </script>
@@ -86,6 +92,7 @@
     <input type="button" id="resetEncoder" value="Reset Encoder Count">
   </div>
   <div>
+    <input type="button" id="Cam" value="Take Picture!">
     <input type="button" id="LED1" value="LED1">
     <input type="button" id="LED2" value="LED2">
   </div>
