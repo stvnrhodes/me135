@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>Websockets!</title>
+</head>
+
+<script src="jquery-1.9.1.min.js"></script>
+<script src="index.js"></script>
+
+<body onload="onLoad()">
+  <noscript>Javascript is disabled, nothing will work</noscript>
+  <div>
+    To control direction, use WASD. To control speed, use XZ.
+    <table border="0">
+      <tr>
+        <td>Speed(0-10):</td>
+        <td id="speed">0</td>
+      </tr>
+      <tr>
+        <td>Left Encoder Count:</td>
+        <td id="lEnc">0</td>
+      </tr>
+      <tr>
+        <td>Right Encoder Count:</td>
+        <td id="rEnc">0</td>
+    </table>
+    <input type="button" id="resetEncoder" value="Reset Encoder Count">
+  </div>
+  <div>
+    <input type="button" id="Cam" value="Take Picture!">
+    <input type="button" id="LED1" value="LED1">
+    <input type="button" id="LED2" value="LED2">
+  </div>
+  <canvas id="robopath" width="200" height="100"></canvas>
+  <img></img>
+</body>
+</html>

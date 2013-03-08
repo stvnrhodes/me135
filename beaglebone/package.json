@@ -4,12 +4,11 @@
   "version": "0.0.1",
   "private": true,
   "dependencies" : {
-    "ref"       :  "0.1.x",
-    "ffi"       :  "1.2.x",
-    "express"   :  "3.1.x",
-    "serialport":  "1.0.x",
-    "ws"        :  "0.4.x",
-    "winston"   :  "0.6.2"
+    "ref"       :  "0.x",
+    "ffi"       :  "1.x",
+    "serialport":  "1.x",
+    "ws"        :  "0.x",
+    "winston"   :  "0.x"
   },
   "bundledDependencies": [
     "cv"

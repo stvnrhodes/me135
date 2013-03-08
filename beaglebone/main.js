@@ -2,12 +2,10 @@ var log = require('winston');
 log.add(log.transports.File, { filename: 'beaglebone.log' });
 log.info("Starting program");
 
-var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var cv = require('cv');
-var express = require('express');
-var WebSocketServer = require('ws');
+var WebSocketServer = require('ws').Server;
 var serialport = require('serialport')
 var Uart = serialport.SerialPort;
 var exec = require('child_process').exec;
@@ -27,11 +25,14 @@ var capture = cv.CreateCameraCapture(0);
 cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_WIDTH, 162);
 cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_HEIGHT, 122);
 log.info("Camera is up");
+var start = (new Date).getTime();
 var frame = cv.QueryFrame(capture);
+var diff = (new Date).getTime() - start;
+log.info(diff);
 var grabFrame = function() {
-  // cv.QueryFrame(capture);
+  cv.QueryFrame.async(capture, function() {});
 }
-setInterval(grabFrame, 200);
+setInterval(grabFrame, 500);
 
 exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
      'echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0 ',
@@ -44,7 +45,7 @@ exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
         parser: serialport.parsers.readline("\n")
       });
       uart.on("open", function () {
-        console.log('UART Open');
+        log.info('UART Open');
         runServer(uart)
       });
     }
@@ -52,54 +53,70 @@ exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
 
 
 function runServer (uart) {
-  var app = express();
-  app.use(express.static(__dirname + '/public'));
-  var server = http.createServer(app);
+  log.info("Starting Server");
+  var server = require('http').createServer(handler);
+  var wss = new WebSocketServer({server: server});
+
   server.listen(8080);
-  var wss = new WebSocketServer({server:server});
 
   wss.on('connection', function (ws) {
     wsHandler(ws, uart);
   });
 
-  // function handler (req, res) {
-  //   log.info ('Requesting ' + req.url);
-  //   var request = url.parse(req.url, true);
-  //   var action = request.pathname;
-  //   if (action === '/cam.png') {
-  //     cv.SaveImage.async('./cam.png', frame, function(err) {
-  //       fs.readFile('./cam.png', function(err, img) {
-  //         res.writeHead(200, {'Content-Type': 'image/png' });
-  //         res.end(img, 'binary');
-  //       });
-  //     });
-  //   // } else if (action === '/')
-  //   } else {
-  //     fs.readFile(__dirname + '/index.html',
-  //       function (err, data) {
-  //         if (err) {
-  //           res.writeHead(500);
-  //           return res.end('Error loading index.html');
-  //         }
+  function handler (req, res) {
+    log.info ('Requesting ' + req.url);
+    var request = url.parse(req.url, true);
+    var action = request.pathname;
+    if (action === '/cam.png') {
+      cv.SaveImage.async('./cam.png', frame, function(err) {
+        fs.readFile('./cam.png', function(err, img) {
+          res.writeHead(200, {'Content-Type': 'image/png' });
+          res.end(img, 'binary');
+        });
+      });
+    } else if (action === '/') {
+      fs.readFile(__dirname + '/public/index.html',
+        function (err, data) {
+          if (err) {
+            res.writeHead(500);
+            return res.end("Error loading index.html");
+          }
 
-  //         res.writeHead(200);
-  //         res.end(data);
-  //       }
-  //     );
-  //   }
-  // }
+          res.writeHead(200, {'Content-Type': 'text/html'});
+          res.end(data);
+        }
+      );
+    } else {
+      fs.readFile(__dirname + '/public' + action,
+        function (err, data) {
+          if (err) {
+            res.writeHead(500);
+            return res.end("Error loading " + action);
+          }
+          if (action.match(/.js$/)) {
+            header = {'Content-Type': 'text/javascript'};
+          } else {
+            header = {'Content-Type': 'text/html'};
+          }
+          res.writeHead(200, header);
+          res.end(data);
+        }
+      );
+    }
+  }
 }
 
 function wsHandler(ws, uart) {
   ws.on('message', function(data, flags) {
     if (!flags.binary) {
-      var message = JSON.parse(data);
-      log.info(message);
-      if (message.id === 'led') {
-        uart.write('l' + data.num +'\n');
-      } else if (message.id === 'move') {
-        uart.write('m' + data.dir + (data.spd < 10 ? '0' : '') + data.spd + "\n");
-      } else if (message.id === 'enc') {
+      log.info(data);
+      var msg = JSON.parse(data);
+      if (msg.id === 'led') {
+        log.info("Toggling LED " + msg.num);
+        uart.write('l' + msg.num +'\n');
+      } else if (msg.id === 'move') {
+        uart.write('m' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
+      } else if (msg.id === 'enc') {
         uart.write('e'+"\n");
       }
     }

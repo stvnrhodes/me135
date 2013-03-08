@@ -1,9 +1,9 @@
 CC=gcc
 CFLAGS= -wall
 LDFLAGS = -I/usr/local/include/opencv -lm -lopencv_core -lopencv_highgui -lopencv_video -lopencv_imgproc
-SRC= test.c
-OBJECTS = test.o
-ALL = test
+SRC= vision.c
+OBJECTS = vision.o
+ALL = vision
 
 all: $(ALL)
 
