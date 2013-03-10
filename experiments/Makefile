@@ -1,6 +1,6 @@
-CC=gcc
+CC=g++
 CFLAGS= -wall
-LDFLAGS = -I/usr/local/include/opencv -lm -lopencv_core -lopencv_highgui -lopencv_video -lopencv_imgproc
+LDFLAGS = -I /usr/local/lib/libopencv* -lm -lopencv_core -lopencv_highgui -lopencv_video -lopencv_imgproc
 SRC= vision.c
 OBJECTS = vision.o
 ALL = vision

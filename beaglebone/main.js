@@ -25,14 +25,14 @@ var capture = cv.CreateCameraCapture(0);
 cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_WIDTH, 162);
 cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_HEIGHT, 122);
 log.info("Camera is up");
-var start = (new Date).getTime();
-var frame = cv.QueryFrame(capture);
-var diff = (new Date).getTime() - start;
-log.info(diff);
-var grabFrame = function() {
-  cv.QueryFrame.async(capture, function() {});
-}
-setInterval(grabFrame, 500);
+// var start = (new Date).getTime();
+// var diff = (new Date).getTime() - start;
+// log.info(diff);
+// var grabFrame = function() {
+//   cv.QueryFrame.async(capture, function() {});
+// }
+// grabFrame();
+// setInterval(grabFrame, 500);
 
 exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
      'echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0 ',
