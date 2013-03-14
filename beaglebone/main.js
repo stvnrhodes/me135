@@ -4,35 +4,39 @@ log.info("Starting program");
 
 var fs = require('fs');
 var url = require('url');
-var cv = require('cv');
 var WebSocketServer = require('ws').Server;
 var serialport = require('serialport')
 var Uart = serialport.SerialPort;
 var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
+var async = require('async');
+
+var vision = spawn('c++/vision')
+
+vision.stdout.on('data', function (data) {
+  log.info('stdout: ' + data);
+});
+
+vision.stderr.on('data', function (data) {
+  log.warn('stderr: ' + data);
+});
+
+vision.on('close', function (code) {
+  log.info('child process exited with code ' + code);
+});
 
 process.on( 'SIGINT', function() {
-  cv.ReleaseCapture(capture);
+  log.warn("Kill signal recieved");
+  vision.stdin.write('q');
   process.exit();
 })
 
 process.on('uncaughtException', function(err) {
-  console.error(err.stack);
-  cv.ReleaseCapture(capture);
+  log.error(err.stack);
+  vision.stdin.write('q');
   process.exit();
 });
 
-var capture = cv.CreateCameraCapture(0);
-cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_WIDTH, 162);
-cv.SetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_HEIGHT, 122);
-log.info("Camera is up");
-// var start = (new Date).getTime();
-// var diff = (new Date).getTime() - start;
-// log.info(diff);
-// var grabFrame = function() {
-//   cv.QueryFrame.async(capture, function() {});
-// }
-// grabFrame();
-// setInterval(grabFrame, 500);
 
 exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
      'echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0 ',
@@ -67,13 +71,19 @@ function runServer (uart) {
     log.info ('Requesting ' + req.url);
     var request = url.parse(req.url, true);
     var action = request.pathname;
-    if (action === '/cam.png') {
-      cv.SaveImage.async('./cam.png', frame, function(err) {
-        fs.readFile('./cam.png', function(err, img) {
-          res.writeHead(200, {'Content-Type': 'image/png' });
+    if (action === '/cam.jpg') {
+      fs.watch('./cam.jpg', { persistent: false }, function(event, filename) {
+        fs.readFile('./cam.jpg', function(err, img) {
+          if (err) {
+            log.error(err);
+            res.writeHead(500);
+            return res.end("Error loading index.html");
+          }
+          res.writeHead(200, {'Content-Type': 'image/jpg' });
           res.end(img, 'binary');
         });
       });
+      vision.stdin.write('s\n');
     } else if (action === '/') {
       fs.readFile(__dirname + '/public/index.html',
         function (err, data) {
@@ -87,21 +97,23 @@ function runServer (uart) {
         }
       );
     } else {
-      fs.readFile(__dirname + '/public' + action,
-        function (err, data) {
-          if (err) {
-            res.writeHead(500);
-            return res.end("Error loading " + action);
+      if (!action.match(/\.\./)) {
+        fs.readFile(__dirname + '/public' + action,
+          function (err, data) {
+            if (err) {
+              res.writeHead(500);
+              return res.end("Error loading " + action);
+            }
+            if (action.match(/.js$/)) {
+              header = {'Content-Type': 'text/javascript'};
+            } else {
+              header = {'Content-Type': 'text/html'};
+            }
+            res.writeHead(200, header);
+            res.end(data);
           }
-          if (action.match(/.js$/)) {
-            header = {'Content-Type': 'text/javascript'};
-          } else {
-            header = {'Content-Type': 'text/html'};
-          }
-          res.writeHead(200, header);
-          res.end(data);
-        }
-      );
+        );
+      }
     }
   }
 }
@@ -130,4 +142,12 @@ function wsHandler(ws, uart) {
       log.warn(e);
     }
   });
+  var m = new Maze(100,100);
+  var i = 1;
+  var j = 1;
+  setInterval(function() {
+    m.setExplored(1,1);
+
+  }, 100);
+
 }
