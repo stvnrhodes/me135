@@ -13,6 +13,9 @@ var async = require('async');
 
 var vision = spawn('c++/vision')
 
+var Maze = require('./public/maze.js').Maze;
+var Cell = require('./public/maze.js').Cell;
+
 vision.stdout.on('data', function (data) {
   log.info('stdout: ' + data);
 });
@@ -119,9 +122,10 @@ function runServer (uart) {
 }
 
 function wsHandler(ws, uart) {
+  log.info("Running websockets");
   ws.on('message', function(data, flags) {
     if (!flags.binary) {
-      log.info(data);
+      log.info("Websocket message:" + data);
       var msg = JSON.parse(data);
       if (msg.id === 'led') {
         log.info("Toggling LED " + msg.num);
@@ -133,6 +137,7 @@ function wsHandler(ws, uart) {
       }
     }
   });
+  log.info("Sending random maze");
   uart.on('data', function(data) {
     log.debug("UART data received: " + data);
     try {
@@ -143,11 +148,34 @@ function wsHandler(ws, uart) {
     }
   });
   var m = new Maze(100,100);
-  var i = 1;
-  var j = 1;
-  setInterval(function() {
-    m.setExplored(1,1);
+  var i = 50;
+  var j = 50;
+  var dir = 'N';
+  var directions = ['N','S','E','W'];
+  var mazeDrawer = setInterval(function() {
+    var chance = Math.random() * 4;
+    if (chance < 1) {
+      i++;
+      dir = 'E';
+    } else if (chance < 2) {
+      i--;
+      dir = 'W';
+    } else if (chance < 3) {
+      j++;
+      dir = 'S';
+    } else if (chance < 4) {
+      j--;
+      dir = 'N';
+    }
 
-  }, 100);
-
+    var c = new Cell(i, j, dir, m);
+    c.addWall('L');
+    var msg = {id:'maze', maze:m.getData(), cell:c.getData()};
+    ws.send(JSON.stringify(msg), function(error) {
+      if (error) {
+        log.error(error);
+        clearInterval(mazeDrawer);
+      }
+    });
+  }, 250);
 }

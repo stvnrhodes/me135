@@ -23,16 +23,20 @@
 
 // Make a maze of height x and width y.
 // This should be at least twice as big as the actual maze
-// This is because the real mazeedges need to be inside the data structure
+// This is because the real maze edges need to be inside the data structure
 // and we can start anywhere in the maze
 Maze = function(x, y) {
-  x = Math.floor(x);
-  y = Math.floor(y/2)
-  this.maze = new Array(x);
-  for (var i = 0; i < x; i++) {
-    this.maze[i] = new Array(y);
-    for (var j = 0; j < y; j++) {
-      this.maze[i][j] = 0;
+  if (arguments.length == 1) {
+    this.maze = JSON.parse(x);
+  } else {
+    x = Math.floor(x);
+    y = Math.floor(y/2)
+    this.maze = new Array(x);
+    for (var i = 0; i < x; i++) {
+      this.maze[i] = new Array(y);
+      for (var j = 0; j < y; j++) {
+        this.maze[i][j] = 0;
+      }
     }
   }
 };
@@ -228,14 +232,20 @@ Maze.prototype._checkSide = function(str) {
 
 // This is the current cell
 // Direction must be N, S, E, or W
+// Alternatively, feed in getData as x and map as y
 Cell = function(x, y, dir, maze) {
-  if (maze != undefined) {
-    maze.setExplored(x, y);
+  if (arguments.length == 2) {
+    this.x = x[0];
+    this.y = x[1];
+    this.dir = x[2]
+    this.maze = y;
+  } else {
+    this.x = x;
+    this.y = y;
+    this.dir = Cell.dirTable[dir];
+    this.maze = maze;
   }
-  this.x = x;
-  this.y = y;
-  this.dirLetter = dir;
-  this.dir = Cell.dirTable[dir];
+  this.maze.setExplored(this.x, this.y);
 };
 
 // The dir table is CCW, mod 4, so we can add directions
@@ -247,43 +257,51 @@ Cell.dirTable = {
   W:1,
   S:2,
   E:3,
+  n:0,
+  w:1,
+  s:2,
+  e:3,
   F:0,
   L:1,
   B:2,
   R:3,
+  f:0,
+  l:1,
+  b:2,
+  r:3,
 };
 
 // Direction is F, R, L, or B
-Cell.prototype.addWall = function(dir, maze) {
+Cell.prototype.addWall = function(dir) {
   var direction = (Cell.dirTable[dir] + this.dir) % 4;
   var x = this.x;
   var y = this.y;
   if (direction === 0) {
-    y === 0 ? y = maze.getHeight() : y = y - 1;
+    y === 0 ? y = this.maze.getHeight() : y = y - 1;
   } else if (direction === 1) {
-    x === 0 ? x = maze.getWidth() : x = x - 1;
+    x === 0 ? x = this.maze.getWidth() : x = x - 1;
   } else if (direction === 2) {
-    y === maze.getHeight() ? y = 0 : y = y + 1;
+    y === this.maze.getHeight() ? y = 0 : y = y + 1;
   } else if (direction === 3) {
-    x === maze.getWidth() ? x = 0 : x = x + 1;
+    x === this.maze.getWidth() ? x = 0 : x = x + 1;
   }
-  maze.addWall([this.x, this.y], [x,y]);
+  this.maze.addWall([this.x, this.y], [x,y]);
 };
 
-Cell.prototype.addConnect = function(dir, maze) {
+Cell.prototype.addConnect = function(dir) {
   var direction = (Cell.dirTable[dir] + this.dir) % 4;
   var x = this.x;
   var y = this.y;
   if (direction === 0) {
-    y === 0 ? y = maze.getHeight() : y = y - 1;
+    y === 0 ? y = this.maze.getHeight() : y = y - 1;
   } else if (direction === 1) {
-    x === 0 ? x = maze.getWidth() : x = x - 1;
+    x === 0 ? x = this.maze.getWidth() : x = x - 1;
   } else if (direction === 2) {
-    y === maze.getHeight() ? y = 0 : y = y + 1;
+    y === this.maze.getHeight() ? y = 0 : y = y + 1;
   } else if (direction === 3) {
-    x === maze.getWidth() ? x = 0 : x = x + 1;
+    x === this.maze.getWidth() ? x = 0 : x = x + 1;
   }
-  maze.addConnect([this.x, this.y], [x,y]);
+  this.maze.addConnect([this.x, this.y], [x,y]);
 };
 
 // Turn dir, then move x steps
@@ -291,8 +309,8 @@ Cell.prototype.move = function(dir, x) {
   // TODO: Implement me!
 }
 
-Cell.prototype.getData = function(dir) {
-  return [this.x, this.y, this.dirLetter];
+Cell.prototype.getData = function() {
+  return [this.x, this.y, this.dir];
 };
 
 

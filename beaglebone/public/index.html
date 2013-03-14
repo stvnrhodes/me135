@@ -3,10 +3,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-<title>Websockets!</title>
+<title>ME135 Kickass Project</title>
 </head>
 
 <script src="jquery-1.9.1.min.js"></script>
+<script src="utils.js"></script>
 <script src="maze.js"></script>
 <script src="index.js"></script>
 
@@ -27,6 +28,7 @@
         <td>Right Encoder Count:</td>
         <td id="rEnc">0</td>
     </table>
+    <span id="mazeCoord">Click a cell!</span><br>
     <input type="button" id="resetEncoder" value="Reset Encoder Count">
   </div>
   <div>
@@ -34,7 +36,7 @@
     <input type="button" id="LED1" value="LED1">
     <input type="button" id="LED2" value="LED2">
   </div>
-  <canvas id="robopath" width="200" height="200">
+  <canvas id="robopath" width="400" height="400">
     No canvas, so no robopath!
   </canvas>
   <img></img>
