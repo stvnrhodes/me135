@@ -153,10 +153,15 @@ Maze.prototype.getPath = function(cell_a, cell_b) {
   // Do maze finding algorithm here
 };
 
-Maze.prototype.getPathToUnknown = function(cell) {
+Maze.prototype.getPathToUnknown = function(x,y) {
   // Probably do fill algorithm to find nearest unknown
   // Either getPath to an unknown, or do travelling salesman
+
 };
+
+Maze.prototype.getAdjacent = function(x,y) {
+
+}
 
 Maze.prototype.isExplored = function(x, y) {
   if ((x + y) & 1) {
@@ -304,9 +309,34 @@ Cell.prototype.addConnect = function(dir) {
   this.maze.addConnect([this.x, this.y], [x,y]);
 };
 
-// Turn dir, then move x steps
-Cell.prototype.move = function(dir, x) {
-  // TODO: Implement me!
+Cell.prototype.getPath = function(x,y) {
+  // TODO: Benchmark, see if it's too slow when ran a lot
+  var path = maze.getPath([this.x, this.y], [x,y]);
+  return path;
+}
+
+Cell.prototype.getPathToUnknown = function() {
+  var path = maze.getPathToUnknown([this.x, this.y])
+}
+
+// Turn F,R,L,B
+Cell.prototype.turn = function(dir) {
+  this.dir += Cell.dirTable[dir];
+  this.dir %= 4;
+}
+
+// Move n steps
+Cell.prototype.move = function(n) {
+  if (this.dir === 0) {
+    this.y -= n;
+  } else if (this.dir === 1) {
+    this.x += n;
+  } else if (this.dir === 2) {
+    this.y += n;
+  } else if (this.dir === 3) {
+    this.x -= n;
+  }
+  this.maze.setExplored(this.x, this.y);
 }
 
 Cell.prototype.getData = function() {
