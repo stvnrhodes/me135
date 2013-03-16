@@ -108,33 +108,32 @@ function drawMaze(maze, cell, canvas){
     var y0 = corners[0][1];
     var x1 = corners[1][0];
     var y1 = corners[1][1];
-    var height = y1 - y0;
-    var width = x1 - x0;
+    var height = x1 - x0;
+    var width = y1 - y0;
     var mazeSize = (height > width ? height : width);
     var BORDER = 10;
     // Cell size in pixels, 10 pixel border, add 1 b/c 0 indexed
-    var cellSize = Math.floor((canvas.width - BORDER) / (mazeSize + 1));
-    var WALL_WIDTH = Math.floor(cellSize/20);
-    if (WALL_WIDTH === 0) {
-      WALL_WIDTH = 1;
+    var cellSize = Math.floor((canvas.width - BORDER) / (mazeSize));
+    var wall_width = Math.floor(cellSize/20);
+    if (wall_width === 0) {
+      wall_width = 1;
     }
-    var xOffset = (mazeSize === width ? BORDER / 2
+    var yOffset = (mazeSize === width ? BORDER / 2
                   : Math.floor(((height - width) * cellSize + BORDER)/2));
-    var yOffset = (mazeSize === height ? BORDER / 2
+    var xOffset = (mazeSize === height ? BORDER / 2
                   : Math.floor(((width - height) * cellSize + BORDER)/2));
-
-    mazeClickInfo = [cellSize, xOffset, yOffset];
+    mazeClickInfo = {cellSize:cellSize, xOffset:xOffset, yOffset:yOffset, x0:x0, y0:y0};
 
     // Draw grey for unexplored cells, white for explored
     var drawCell = function(x, y) {
       x = (x - x0) * cellSize + xOffset;
       y = (y - y0) * cellSize + yOffset;
-      ctx.fillRect (x, y, cellSize, cellSize);
+      ctx.fillRect (y, x, cellSize, cellSize);
     };
 
     // Draw explored areas
-    for (var x = x0; x <= x1; x++) {
-      for (var y = y0; y <= y1; y++) {
+    for (var x = x0; x < x1; x++) {
+      for (var y = y0; y < y1; y++) {
         if (maze.isExplored(x,y)) {
           ctx.fillStyle = "rgb(255,255,255)";
         } else {
@@ -146,47 +145,48 @@ function drawMaze(maze, cell, canvas){
 
     // Draw wall to right of cell
     var drawVertWall = function (x, y) {
-      x = (x - x0 + 1) * cellSize + xOffset - WALL_WIDTH/2;
-      y = (y - y0) * cellSize + yOffset - WALL_WIDTH/2;
-      ctx.fillRect(x, y, WALL_WIDTH, cellSize + WALL_WIDTH);
+      x = (x - x0) * cellSize + xOffset - wall_width/2;
+      y = (y - y0 + 1) * cellSize + yOffset - wall_width/2;
+      ctx.fillRect(y, x, wall_width, cellSize + wall_width);
     };
 
     // Draw wall at bottom of cell
     var drawHorizWall = function(x, y) {
-      x = (x - x0) * cellSize + xOffset - WALL_WIDTH/2;
-      y = (y - y0 + 1) * cellSize + yOffset - WALL_WIDTH/2;
-      ctx.fillRect(x, y, cellSize + WALL_WIDTH, WALL_WIDTH);
+      x = (x - x0 + 1) * cellSize + xOffset - wall_width/2;
+      y = (y - y0) * cellSize + yOffset - wall_width/2;
+      ctx.fillRect(y, x, cellSize + wall_width, wall_width);
     };
 
     ctx.fillStyle = "rgb(0,0,0)";
-    // Draw top
-    for (var x = x0; x <= x1; x++) {
-      if (maze.isWall([x,y0-1],[x,y0])) {
-        drawHorizWall(x, y0-1);
+    // Draw left side
+    for (var x = x0; x < x1; x++) {
+      if (maze.isWall(x,y0-1,x,y0)) {
+        drawVertWall(x, y0-1);
       }
     }
-    // Draw left side
-    for (var y = y0; y <= y1; y++) {
-      if (maze.isWall([x0-1,y],[x0,y])) {
-        drawVertWall(x0-1, y)
+    // Draw top
+    for (var y = y0; y < y1; y++) {
+      if (maze.isWall(x0-1,y,x0,y)) {
+        drawHorizWall(x0-1, y)
       }
     }
     // Draw the rest
-    for (var x = x0; x <= x1; x++) {
-      for (var y = y0; y <= y1; y++) {
-        if (maze.isWall([x,y],[x,y+1])) {
-          drawHorizWall(x, y);
-        }
-        if (maze.isWall([x,y],[x+1,y])) {
+    for (var x = x0; x < x1; x++) {
+      for (var y = y0; y < y1; y++) {
+        if (maze.isWall(x,y,x,y+1)) {
           drawVertWall(x,y);
+        }
+        if (maze.isWall(x,y,x+1,y)) {
+          drawHorizWall(x, y);
         }
       }
     }
+      // I'm lazy, so I changed x,y to y,x
     var drawTriangle = function(x,y,dir) {
       x = (x - x0) * cellSize + xOffset;
       y = (y - y0) * cellSize + yOffset;
       // Translate canvas to center, rotate to correct angle, then make triangle
-      ctx.translate(x + cellSize/2, y + cellSize/2);
+      ctx.translate(y + cellSize/2, x + cellSize/2);
       ctx.scale(cellSize, cellSize);
       ctx.rotate(-dir*Math.PI/2)
       ctx.beginPath();
@@ -196,7 +196,7 @@ function drawMaze(maze, cell, canvas){
       ctx.fill();
       ctx.rotate(dir*Math.PI/2)
       ctx.scale(1/cellSize, 1/cellSize);
-      ctx.translate(-x - cellSize/2, -y - cellSize/2)
+      ctx.translate(-y - cellSize/2, -x - cellSize/2)
     }
     if (cell) {
       ctx.fillStyle = "rgb(255,0,0)";
@@ -208,12 +208,10 @@ function drawMaze(maze, cell, canvas){
 
 function mazeClick(evt) {
   if (mazeClickInfo) {
-    var cellSize = mazeClickInfo[0];
-    var xOffset = mazeClickInfo[1];
-    var yOffset = mazeClickInfo[2];
     var coords = $('#robopath')[0].relMouseCoords(evt);
-    var x = Math.floor((coords.x - xOffset) / cellSize);
-    var y = Math.floor((coords.y - yOffset) / cellSize);
-    $('#mazeCoord').html("Cell clicked: " + (x+1) + "," + (y+1));
+    var x = Math.floor((coords.y - mazeClickInfo.xOffset) / mazeClickInfo.cellSize);
+    var y = Math.floor((coords.x - mazeClickInfo.yOffset) / mazeClickInfo.cellSize);
+    $('#mazeCoord').html("Cell clicked: " + (x+mazeClickInfo.x0) + "," +
+        (y+mazeClickInfo.y0));
   }
 }

@@ -147,24 +147,24 @@ function wsHandler(ws, uart) {
       log.warn(e);
     }
   });
-  var m = new Maze(100,100);
-  var i = 50;
-  var j = 50;
-  var dir = 'N';
+  var m = new Maze();
+  var i = 0;
+  var j = 0;
+  var dir = 'E';
   var directions = ['N','S','E','W'];
   var mazeDrawer = setInterval(function() {
     var chance = Math.random() * 4;
     if (chance < 1) {
-      i++;
+      j++;
       dir = 'E';
     } else if (chance < 2) {
-      i--;
+      j--;
       dir = 'W';
     } else if (chance < 3) {
-      j++;
+      i++;
       dir = 'S';
     } else if (chance < 4) {
-      j--;
+      i--;
       dir = 'N';
     }
 

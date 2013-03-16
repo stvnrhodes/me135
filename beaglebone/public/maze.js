@@ -8,31 +8,30 @@
 //    15  35  55
 // Conveniently, only cells that add up to even numbers are present.
 
-// Each cell in the maze is represented by 10 bits
-//     /------------ Cell to the left is explored
-//     |/----------- Cell is Explored
-//     || /--------- North Discovered
-//     || |/-------- West Discovered
-//     || ||/------- South Discovered
-//     || |||/------ East Discovered
-//     || |||| /---- North is Wall
-//     || |||| |/--- West is Wall
-//     || |||| ||/-- South is Wall
-//     || |||| |||/- East is Wall
-// 0b1111 1111 1111
 
 // Make a maze of height x and width y.
 // This should be at least twice as big as the actual maze
 // This is because the real maze edges need to be inside the data structure
 // and we can start anywhere in the maze
 Maze = function(m) {
+  this.node_list = [[new Node()]];
+  this.xOffset = 0;
+  this.yOffset = 0;
   if (arguments.length == 1) {
-    // Fix me!!!
-    this.maze = JSON.parse(m);
-  } else {
-    this.node_list = [[new Node()]];
-    this.xOffset = 0;
-    this.yOffset = 0;
+    this._parseAndAdd(m);
+  }
+};
+
+Maze.prototype._parseAndAdd = function(maze_data) {
+  // for (i = 0; i < maze_data.maze.length; i++) {
+  //   for (j = 0; j < maze_data.maze[i].length; j++) {
+  //     this._node(i-maze_data.x0,j-maze_data.y0);
+  //   }
+  // }
+  for (i = 0; i < maze_data.maze.length; i++) {
+    for (j = 0; j < maze_data.maze[i].length; j++) {
+      this._node(i+maze_data.x0,j+maze_data.y0)._parseAndAdd(maze_data.maze[i][j], this);
+    }
   }
 };
 
@@ -64,18 +63,30 @@ Maze.prototype._node = function(x, y) {
       elem.push(new Node());
     });
   }
-  return this.node_list[x+this.xOffset][y+this.yOffset];
+  var node = this.node_list[x+this.xOffset][y+this.yOffset];
+  if (!node.loc) {
+    node.loc = [x,y];
+  }
+  return node;
 };
-
-// The maze is just a graph
-// Add edges to left, right
-// Node we start at is 0,0
-// We can try to usually start in the corner
 
 
 Maze.prototype.getData = function() {
-  // Todo: FIX!
-  return JSON.stringify(this.maze);
+  var row;
+  var maze = [];
+  var corner = this.getCorners();
+  var x0 = corner[0][0];
+  var y0 = corner[0][1];
+  var x1 = corner[1][0];
+  var y1 = corner[1][1];
+  for (var i = x0; i < x1; i++) {
+    row = [];
+    for (var j = y0; j < y1; j++) {
+      row.push(this._node(i,j).getData());
+    }
+    maze.push(row);
+  }
+  return {maze:maze, x0:x0, y0:y0};
 };
 
 Maze.prototype.getWidth = function() {
@@ -137,20 +148,20 @@ Maze.prototype.getPath = function(x0, y0, x1, y1) {
     node_edges = node.getEdges();
     for (var i = 0; i < node_edges.length; i++) {
       var next_node = node_edges[i];
-      if (!path[next_node.id]) {
-        path[next_node.id] = node;
+      if (!path[next_node.loc]) {
+        path[next_node.loc] = node;
         fringe.push(next_node);
       }
     }
-    node = fringe.shift(); // node is undefined if we empty the fringe
-    if (!node) {
+    node = fringe.shift();
+    if (!node) { // node is undefined if we empty the fringe
       return;
     }
   }
   var answer = [];
   while (node !== start){
-    answer.unshift(node);
-    node = path[node.id];
+    answer.unshift(node.loc);
+    node = path[node.loc];
   }
   return answer;
 };
@@ -180,15 +191,38 @@ Maze.prototype.getCorners = function(x, y) {
 // 2-d node list!
 
 // Nodes are the building blocks of mazes
-Node = function(id) {
+Node = function() {
   this.explored = false;
   this.edges = [];
   this.walls = [];
-  if (id) {
-    this.id = id;
-  } else {
-    this.id = uid();
+  // We leave this.loc unset
+  // This is so we can set it dynamically
+};
+
+Node.prototype._parseAndAdd = function(node_data, maze) {
+  this.explored = node_data.ex;
+  for (var i = 0; i < node_data.e.length; i++) {
+    var xy = node_data.e[i];
+    this.edges.push(maze._node(xy[0], xy[1]));
   }
+  for (var i = 0; i < node_data.w.length; i++) {
+    var xy = node_data.w[i];
+    this.walls.push(maze._node(xy[0], xy[1]));
+  }
+};
+
+Node.prototype.getData = function() {
+  var node_data = {};
+  node_data.e = [];
+  for (var i = 0; i <  this.edges.length; i++) {
+     node_data.e.push(this.edges[i].loc);
+  }
+  node_data.w = [];
+  for (var i = 0; i <  this.walls.length; i++) {
+     node_data.w.push(this.walls[i].loc);
+  }
+  node_data.ex = this.explored;
+  return node_data;
 };
 
 Node.prototype.getEdges = function() {
@@ -199,6 +233,7 @@ Node.prototype.getWalls = function() {
   return thus.walls;
 };
 
+// Currently, the node will happily add a wall and an edge to another node
 Node.prototype.addWall = function(node) {
   this.walls.push(node);
 };
@@ -234,19 +269,6 @@ Node.prototype.setExplored = function() {
 };
 
 
-// Provide a unique ID
-var uid_gen = function() {
-  var id = 0;
-  return function() {
-    id++;
-    return id;
-  }
-}
-
-var uid = uid_gen();
-
-
-
 // This is the current cell
 // Direction must be N, S, E, or W
 // Alternatively, feed in getData as x and map as y
@@ -269,24 +291,10 @@ Cell = function(x, y, dir, maze) {
 //   0
 // 1   3
 //   2
-Cell.dirTable = {
-  N:0,
-  W:1,
-  S:2,
-  E:3,
-  n:0,
-  w:1,
-  s:2,
-  e:3,
-  F:0,
-  L:1,
-  B:2,
-  R:3,
-  f:0,
-  l:1,
-  b:2,
-  r:3,
-};
+Cell.dirTable = {N:0,W:1,S:2,E:3,
+                 n:0,w:1,s:2,e:3,
+                 F:0,L:1,B:2,R:3,
+                 f:0,l:1,b:2,r:3,};
 
 // Direction is F, R, L, or B
 Cell.prototype.addWall = function(dir) {
@@ -341,13 +349,13 @@ Cell.prototype.turn = function(dir) {
 // Move n steps
 Cell.prototype.move = function(n) {
   if (this.dir === 0) {
-    this.y -= n;
-  } else if (this.dir === 1) {
-    this.x += n;
-  } else if (this.dir === 2) {
-    this.y += n;
-  } else if (this.dir === 3) {
     this.x -= n;
+  } else if (this.dir === 1) {
+    this.y -= n;
+  } else if (this.dir === 2) {
+    this.x += n;
+  } else if (this.dir === 3) {
+    this.y += n;
   }
   this.maze.setExplored(this.x, this.y);
 }
