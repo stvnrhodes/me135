@@ -103,8 +103,8 @@ void *worker_thread(void *arg)
     int ok = 1, frame_size = 0, decompressed_size = 0;
     unsigned char *tmp_decompressed = NULL;
 
-    int width = 320;
-    int height = 240;
+    int width = 640;
+    int height = 480;
 
     vision::init();
     /* set cleanup handler to cleanup allocated ressources */
@@ -122,11 +122,13 @@ void *worker_thread(void *arg)
         if(fmt_idx > (pglobal->in[input_number].formatCount - 1)) {
             DBG("Format index out of bounds");
             return NULL;
-        }        int res_idx = pglobal->in[input_number].in_formats[fmt_idx].currentResolution;
+        }
+        int res_idx = pglobal->in[input_number].in_formats[fmt_idx].currentResolution;
         if(res_idx > (pglobal->in[input_number].in_formats[fmt_idx].resolutionCount - 1)) {
             DBG("Res index out of bounds");
             return NULL;
         }
+
         // width = pglobal->in[input_number].in_formats[fmt_idx].supportedResolutions[res_idx].width;
         // height = pglobal->in[input_number].in_formats[fmt_idx].supportedResolutions[res_idx].height;
         DBG("Width: %d,Height:%d\n", width, height);

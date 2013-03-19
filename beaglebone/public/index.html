@@ -6,6 +6,7 @@
 <title>ME135 Kickass Project</title>
 </head>
 
+<link rel="stylesheet" href="css/styles.css" type="text/css" />
 <script src="jquery-1.9.1.min.js"></script>
 <script src="utils.js"></script>
 <script src="maze.js"></script>
@@ -13,33 +14,51 @@
 
 <body onload="onLoad()">
   <noscript>Javascript is disabled, nothing will work</noscript>
-  <div>
-    <img id="livefeed" />
-    To control direction, use WASD. To control speed, use XZ.
-    <table border="0">
-      <tr>
-        <td>Speed(0-10):</td>
-        <td id="speed">0</td>
-      </tr>
-      <tr>
-        <td>Left Encoder Count:</td>
-        <td id="lEnc">0</td>
-      </tr>
-      <tr>
-        <td>Right Encoder Count:</td>
-        <td id="rEnc">0</td>
-    </table>
-    <span id="mazeCoord">Click a cell!</span><br>
-    <input type="button" id="resetEncoder" value="Reset Encoder Count">
+  <div id="sidebar">
+    <hgroup>
+      <h2><b id="developer-percentage">00%</b> <span id="developer-label">Sensor 1</span></h2>
+      <h2><b id="ux-percentage">00%</b> <span id="ux-label">Sensor 2</span></h2>
+      <h2><b id="strategy-percentage">00%</b> <span id="strategy-label">Sensor 3</span></h2>
+      <h2><b id="other-percentage">00%</b> <span id="other-label">Sensor 4</span></h2>
+    </hgroup>
   </div>
-  <div>
-    <input type="button" id="Cam" value="Take Picture!">
-    <input type="button" id="LED1" value="LED1">
-    <input type="button" id="LED2" value="LED2">
-  </div>
-  <canvas id="robopath" width="400" height="400">
-    No canvas, so no robopath!
-  </canvas>
+  <section id="main-content-container">
+    <div id="title">
+      <h2>ME135 Search, Rescue, and Destroy</h2>
+      <h4>Kyle Tse, Anna Lee, Spencer Wong, Austin Chang, Steven Rhodes, Kevin Yu</h4>
+    </div>
+    <div class="wrapper" id="livefeed-div">
+      <img id="livefeed" width="640" height="480" alt="live feed from the webcam" />
+    </div>
+    <div class="wrapper" id="robopath-div">
+      <canvas id="robopath" width="400" height="400">
+        No canvas, so no robopath!
+      </canvas>
+    </div>
+    <div id="controls-div">
+      To control direction, use WASD. To control speed, use XZ.
+      <table border="0">
+        <tr>
+          <td>Speed(0-10):</td>
+          <td id="speed">0</td>
+        </tr>
+        <tr>
+          <td>Left Encoder Count:</td>
+          <td id="lEnc">0</td>
+        </tr>
+        <tr>
+          <td>Right Encoder Count:</td>
+          <td id="rEnc">0</td>
+      </table>
+      <span id="mazeCoord">Click a cell!</span><br>
+      <input type="button" id="resetEncoder" value="Reset Encoder Count">
+    </div>
+    <div>
+      <input type="button" id="Cam" value="Take Picture!">
+      <input type="button" id="LED1" value="LED1">
+      <input type="button" id="LED2" value="LED2">
+    </div>
+  </section>
   <img></img>
 </body>
 </html>

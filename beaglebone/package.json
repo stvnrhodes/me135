@@ -5,6 +5,7 @@
   "private": true,
   "dependencies" : {
     "async"     :  "0.x",
+    "express"   :  "3.x",
     "ref"       :  "0.x",
     "ffi"       :  "1.x",
     "serialport":  "1.x",

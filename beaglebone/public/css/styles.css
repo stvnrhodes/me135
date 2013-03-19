@@ -1,0 +1,119 @@
+body {
+  background: #000 url('../site-img/textured_grey.jpg') repeat left top;
+}
+
+#sidebar{
+  background: #000 url('../site-img/fake_brick.png') repeat left top;
+  color: #fff;
+  padding: 0px 20px 20px 20px;
+  position: fixed;
+  text-align: center;
+  height: 100%;
+  max-width: 158px;
+  z-index: 10;
+  -moz-box-shadow: 1px 0 2px rgba(0, 0, 0, 0.7);
+  -webkit-box-shadow: 1px 0 2px rgba(0, 0, 0, 0.7);
+  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.7);
+
+}
+
+#sidebar hgroup{
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+
+#sidebar h2{
+  display: block;
+  /*font-family: 'Nunito', sans-serif;;*/
+
+  margin: 0;
+  padding: 0 0 10px 0;
+
+  font-weight: 400;
+  text-align: center;
+}
+
+#sidebar h2 b{
+  display: block;
+  width: 150px;
+  margin: 0;
+  background: #262626;
+  border-radius: 10px;
+  padding: 12px 4px 8px 0px;
+  /*font: 700 45px/50px 'Nunito', sans-serif;*/
+}
+
+
+
+#sidebar h2 span{
+  font-size: 17px;
+  display: block;
+  /*font-family: 'Nunito', sans-serif;;*/
+  font-weight: normal;
+  text-align: center;
+  font-weight: 500;
+
+}
+
+
+#sidebar span#strategy-label{
+  color: #d12b75;
+}
+
+#sidebar span#ux-label{
+  color: #f3b01a;
+}
+
+#sidebar span#developer-label{
+  color: #2098d0;
+}
+
+#sidebar span#other-label{
+  color: #51b247;
+}
+
+#strategy-percentage{
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #d12b75, 0 1px 0px #333; /*//*/
+}
+
+#ux-percentage{
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #f3b01a, 0 1px 0px #333; /*//*/
+}
+
+#developer-percentage{
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #2098d0, 0 1px 0px #333; /*//*/
+}
+
+#other-percentage{
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #51b247, 0 1px 0px #333; /*//*/
+}
+
+#title{
+margin-top:-60px;
+}
+
+#sidebar p{
+  font-size: 11px;
+  position: absolute;
+  color: #666;
+  bottom: 25px;
+  left: 25px;
+  max-width: 148px;
+}
+
+#main-content-container{
+  padding: 50px;
+  padding-left: 40px;
+  margin-left: 195px;
+}
+
+#livefeed-div{
+  float:left;
+}
+#robopath-div{
+  float:left;
+}
+#controls-div{
+  clear:both;
+}

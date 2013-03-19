@@ -2,6 +2,8 @@ var log = require('winston');
 log.add(log.transports.File, { filename: 'beaglebone.log' });
 log.info("Starting program");
 
+var express = require('express');
+var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var WebSocketServer = require('ws').Server;
@@ -11,7 +13,7 @@ var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var async = require('async');
 var cmd = 'mjpg-streamer/mjpg_streamer';
-var args = ['-i','mjpg-streamer/input_uvc.so -r 320x240',
+var args = ['-i','mjpg-streamer/input_uvc.so -r 640x480',
             '-o','mjpg-streamer/output_http.so -p 8081',
             '-o','mjpg-streamer/output_opencv.so']
 var vision = spawn(cmd, args);
@@ -55,64 +57,17 @@ uart.on("open", function () {
 
 function runServer (uart) {
   log.info("Starting Server");
-  var server = require('http').createServer(handler);
-  var wss = new WebSocketServer({server: server});
+  var app = express();
+  app.use(express.static(__dirname + '/public'));
 
+  var server = http.createServer(app);
   server.listen(8080);
 
+  var wss = new WebSocketServer({server: server});
   wss.on('connection', function (ws) {
     wsHandler(ws, uart);
   });
 
-  function handler (req, res) {
-    log.info ('Requesting ' + req.url);
-    var request = url.parse(req.url, true);
-    var action = request.pathname;
-    if (action === '/cam.jpg') {
-      fs.watch('./cam.jpg', { persistent: false }, function(event, filename) {
-        fs.readFile('./cam.jpg', function(err, img) {
-          if (err) {
-            log.error(err);
-            res.writeHead(500);
-            return res.end("Error loading index.html");
-          }
-          res.writeHead(200, {'Content-Type': 'image/jpg' });
-          res.end(img, 'binary');
-        });
-      });
-      vision.stdin.write('s\n');
-    } else if (action === '/') {
-      fs.readFile(__dirname + '/public/index.html',
-        function (err, data) {
-          if (err) {
-            res.writeHead(500);
-            return res.end("Error loading index.html");
-          }
-
-          res.writeHead(200, {'Content-Type': 'text/html'});
-          res.end(data);
-        }
-      );
-    } else {
-      if (!action.match(/\.\./)) {
-        fs.readFile(__dirname + '/public' + action,
-          function (err, data) {
-            if (err) {
-              res.writeHead(500);
-              return res.end("Error loading " + action);
-            }
-            if (action.match(/.js$/)) {
-              header = {'Content-Type': 'text/javascript'};
-            } else {
-              header = {'Content-Type': 'text/html'};
-            }
-            res.writeHead(200, header);
-            res.end(data);
-          }
-        );
-      }
-    }
-  }
 }
 
 function wsHandler(ws, uart) {
