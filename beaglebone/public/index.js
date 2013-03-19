@@ -2,10 +2,12 @@ if (!window.WebSocket) {
   alert("WebSocket NOT supported by your Browser! This whole thing's gonna fail");
 }
 var host = window.document.location.host.replace(/:.*/, '');
+var ws
 if (host.match(/([0-9]+\.){3}[0-9]+/)) {
-  host = host + ':8080';
+  ws = new WebSocket('ws://' + host + ':8080');
+} else {
+  ws = new WebSocket('ws://' + host);
 }
-var ws = new WebSocket('ws://' + host);
 
 
 function onLoad() {
@@ -14,6 +16,7 @@ function onLoad() {
   function wsSend(msg) {
     ws.send(JSON.stringify(msg));
   }
+  $('#livefeed').attr({src:'http://'+host+':8081/?action=stream'});
   $('#speed').html(speed);
   ws.onopen = function() {
     $(document).keydown ( function ( event ) {

@@ -10,8 +10,11 @@ var Uart = serialport.SerialPort;
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var async = require('async');
-
-var vision = spawn('c++/vision')
+var cmd = 'mjpg-streamer/mjpg_streamer';
+var args = ['-i','mjpg-streamer/input_uvc.so -r 320x240',
+            '-o','mjpg-streamer/output_http.so -p 8081',
+            '-o','mjpg-streamer/output_opencv.so']
+var vision = spawn(cmd, args);
 
 var Maze = require('./public/maze.js').Maze;
 var Cell = require('./public/maze.js').Cell;
@@ -28,34 +31,25 @@ vision.on('close', function (code) {
   log.info('child process exited with code ' + code);
 });
 
-process.on( 'SIGINT', function() {
-  log.warn("Kill signal recieved");
-  vision.stdin.write('q');
-  process.exit();
-})
+// process.on( 'SIGINT', function() {
+//   log.warn("Kill signal recieved");
+//   process.exit();
+// })
 
-process.on('uncaughtException', function(err) {
-  log.error(err.stack);
-  vision.stdin.write('q');
-  process.exit();
+// process.on('uncaughtException', function(err) {
+//   log.error(err.stack);
+//   vision.stdin.write('q');
+//   process.exit();
+// });
+
+
+var uart = new Uart('/dev/ttyO4', {
+  baudrate: 115200,
+  parser: serialport.parsers.readline("\n")
 });
-
-
-exec('echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn && ' +
-     'echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0 ',
-  function (error, stdout, stderr) {
-    if (error !== null) {
-      console.log('exec error: ' + error);
-    } else {
-      var uart = new Uart('/dev/ttyO4', {
-        baudrate: 115200,
-        parser: serialport.parsers.readline("\n")
-      });
-      uart.on("open", function () {
-        log.info('UART Open');
-        runServer(uart)
-      });
-    }
+uart.on("open", function () {
+  log.info('UART Open');
+  runServer(uart)
 });
 
 
