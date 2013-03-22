@@ -12,14 +12,36 @@ var Uart = serialport.SerialPort;
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var async = require('async');
+var Maze = require('./public/maze.js').Maze;
+var Cell = require('./public/maze.js').Cell;
+
+var net = require('net');
+var server = net.createServer(function(c) { //'connection' listener
+  log.info('server connected');
+  c.on('end', function() {
+    log.info('server disconnected');
+  });
+  c.write(JSON.stringify({hi:150, lo:0}));
+  c.on('data', function(data) {
+    log.info('From socket got: ' + data);
+  })
+});
+server.listen('/tmp/opencv.sock', function() { //'listening' listener
+  log.info('server bound');
+});
+
 var cmd = 'mjpg-streamer/mjpg_streamer';
 var args = ['-i','mjpg-streamer/input_uvc.so -r 640x480',
             '-o','mjpg-streamer/output_http.so -p 8081',
             '-o','mjpg-streamer/output_opencv.so']
 var vision = spawn(cmd, args);
 
-var Maze = require('./public/maze.js').Maze;
-var Cell = require('./public/maze.js').Cell;
+process.on( 'SIGINT', function() {
+  log.warn("Kill signal recieved");
+  vision.kill();
+  server.close();
+  process.exit();
+});
 
 vision.stdout.on('data', function (data) {
   log.info('stdout: ' + data);
@@ -32,18 +54,6 @@ vision.stderr.on('data', function (data) {
 vision.on('close', function (code) {
   log.info('child process exited with code ' + code);
 });
-
-// process.on( 'SIGINT', function() {
-//   log.warn("Kill signal recieved");
-//   process.exit();
-// })
-
-// process.on('uncaughtException', function(err) {
-//   log.error(err.stack);
-//   vision.stdin.write('q');
-//   process.exit();
-// });
-
 
 var uart = new Uart('/dev/ttyO4', {
   baudrate: 115200,

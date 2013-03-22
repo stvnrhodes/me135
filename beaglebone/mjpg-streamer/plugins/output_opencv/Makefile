@@ -13,9 +13,9 @@ OTHER_HEADERS = ../../mjpg_streamer.h ../../utils.h ../output.h ../input.h
 
 CFLAGS += -O2
 CFLAGS += -DLINUX -D_GNU_SOURCE -Wall -shared -fPIC
-CFLAGS += `pkg-config --cflags opencv`
+CFLAGS += `pkg-config --cflags opencv jsoncpp`
 # CFLAGS += -DDEBUG -g
-LFLAGS += `pkg-config --libs opencv`
+LFLAGS += `pkg-config --libs opencv jsoncpp`
 LFLAGS += -lpthread -ldl -ljpeg
 
 all: output_opencv.so
@@ -24,10 +24,10 @@ clean:
 	rm -f *.a *.o core *~ *.so *.lo
 
 jpeg_routines.o: jpeg_routines.cpp
-	$(CC) $(CFLAGS) -O2 -c jpeg_routines.cpp -o jpeg_routines.o $(LFLAGS)
+	$(CC) $(CFLAGS) -c jpeg_routines.cpp -o jpeg_routines.o
 
 vision.o: vision.cpp
-	$(CC) $(CFLAGS) -O2 -c vision.cpp -o vision.o $(LFLAGS)
+	$(CC) $(CFLAGS) -c vision.cpp -o vision.o
 
 
 output_opencv.so: $(OTHER_HEADERS) output_opencv.cpp jpeg_routines.o vision.o

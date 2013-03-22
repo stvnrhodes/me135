@@ -106,7 +106,7 @@ void *worker_thread(void *arg)
     int width = 640;
     int height = 480;
 
-    vision::init();
+    Vision cv_runner;
     /* set cleanup handler to cleanup allocated ressources */
     pthread_cleanup_push(worker_cleanup, NULL);
 
@@ -159,7 +159,7 @@ void *worker_thread(void *arg)
         DBG("Width:%d, Height:%d\n", width, height);
         cv::Mat img(height, width, CV_8UC3, decompressed, width * 3 * sizeof(char));
         DBG("Made the mat!\n");
-        vision::loop(img);
+        cv_runner.loop(img);
         // cv::imwrite("image.jpg", img);
         DBG("Wrote the image!\n");
 
