@@ -1,22 +1,26 @@
+// Set up websockets
 if (!window.WebSocket) {
   alert("WebSocket NOT supported by your Browser! This whole thing's gonna fail");
 }
 var host = window.document.location.host.replace(/:.*/, '');
-var ws
-if (host.match(/([0-9]+\.){3}[0-9]+/)) {
-  ws = new WebSocket('ws://' + host + ':8080');
-} else {
-  ws = new WebSocket('ws://' + host);
+var ws;
+
+// Convenience function so we don't keep writing JSON.stringify
+function wsSend(msg) {
+  ws.send(JSON.stringify(msg));
 }
 
-
+// Main function
 function onLoad() {
+  if (host.match(/([0-9]+\.){3}[0-9]+/)) {
+    ws = new WebSocket('ws://' + host + ':8080');
+  } else {
+    ws = new WebSocket('ws://' + host);
+  }
   ws.onmessage = onMessage;
   var speed = 5;
-  function wsSend(msg) {
-    ws.send(JSON.stringify(msg));
-  }
-  $('#livefeed').attr({src:'http://'+host+':8081/?action=stream'});
+  $('#livefeed').css('background-image','url(\'http://'+host+':8081/?action=stream\')');
+  // $('#livefeed').attr('src','http://'+host+':8081/?action=stream');
   $('#speed').html(speed);
   ws.onopen = function() {
     $(document).keydown ( function ( event ) {
@@ -67,6 +71,7 @@ function onLoad() {
       wsSend({ id:'enc', action: 'rst' });
     });
     $('#robopath').click ( mazeClick );
+    $('#livefeed').click ( feedClick );
   }
 }
 
@@ -88,10 +93,38 @@ function onMessage(event) {
     var maze = new Maze(data.maze);
     var cell = new Cell(data.cell, maze);
     drawMaze(maze, cell, $('#robopath')[0]);
+  } else if (data.id === 'moments') {
+    var x = data.m10/data.m00;
+    var y = data.m01/data.m00;
+    drawCircle(x, y, Math.sqrt(data.m00)/20, $('#livefeed')[0]);
   }
 }
 
+function drawCircle(x, y, r, canvas) {
+  if (canvas.getContext) {
 
+    var ctx = canvas.getContext('2d');
+    // Store the current transformation matrix
+    ctx.save();
+
+    // Use the identity matrix while clearing the canvas
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Restore the transform
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 2 * Math.PI, false);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#003300';
+    ctx.stroke();
+  }
+}
+
+// This function will be somewhat confusing because the maze uses
+// x as row number and y as column number instead of x as width
+// and y as height
 var mazeClickInfo;
 function drawMaze(maze, cell, canvas){
   if (canvas.getContext) {
@@ -106,6 +139,7 @@ function drawMaze(maze, cell, canvas){
 
     // Restore the transform
     ctx.restore();
+
     var corners = maze.getCorners();
     var x0 = corners[0][0];
     var y0 = corners[0][1];
@@ -184,7 +218,7 @@ function drawMaze(maze, cell, canvas){
         }
       }
     }
-      // I'm lazy, so I changed x,y to y,x
+
     var drawTriangle = function(x,y,dir) {
       x = (x - x0) * cellSize + xOffset;
       y = (y - y0) * cellSize + yOffset;
@@ -217,4 +251,10 @@ function mazeClick(evt) {
     $('#mazeCoord').html("Cell clicked: " + (x+mazeClickInfo.x0) + "," +
         (y+mazeClickInfo.y0));
   }
+}
+
+function feedClick(evt) {
+  var coords = $('#livefeed')[0].relMouseCoords(evt);
+  coords.id = "pic_xy";
+  wsSend(coords);
 }

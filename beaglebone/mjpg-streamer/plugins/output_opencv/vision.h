@@ -14,7 +14,7 @@
 #include <sys/ioctl.h>
 #include <json/json.h>
 
-#define BLUR_FACTOR 20
+#define BLUR_FACTOR 3
 
 class Vision {
  public:

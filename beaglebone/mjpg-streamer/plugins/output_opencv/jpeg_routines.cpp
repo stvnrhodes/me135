@@ -162,12 +162,12 @@ void process_jpeg(unsigned char *out,unsigned char *image,size_t size){
 
   /* This used to do BGR to RGB conversions inline */
 
-  for (int i = 0; i < (int)(cinfo.image_height * cinfo.image_width * 3); i+= 3) {
-    uint8_t b = out[i + 0];
-    uint8_t r = out[i + 2];
-    out[i + 0] = r;
-    out[i + 2] = b;
-  }
+  // for (int i = 0; i < (int)(cinfo.image_height * cinfo.image_width * 3); i+= 3) {
+  //   uint8_t b = out[i + 0];
+  //   uint8_t r = out[i + 2];
+  //   out[i + 0] = r;
+  //   out[i + 2] = b;
+  // }
 
   jpeg_finish_decompress( &cinfo );
   jpeg_destroy_decompress( &cinfo );

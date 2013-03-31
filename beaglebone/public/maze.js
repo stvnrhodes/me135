@@ -236,10 +236,22 @@ Node.prototype.getWalls = function() {
 // Currently, the node will happily add a wall and an edge to another node
 Node.prototype.addWall = function(node) {
   this.walls.push(node);
+  for (var i = 0; i < this.edges.length; i++) {
+    if (node === this.edges[i]) {
+      // Remove node from edges
+      this.edges.splice(i, 1);
+    }
+  };
 };
 
 Node.prototype.addEdge = function(node) {
-  this.edges.push(node)
+  this.edges.push(node);
+  for (var i = 0; i < this.walls.length; i++) {
+    if (node === this.walls[i]) {
+      // Remove node from walls
+      this.walls.splice(i, 1);
+    }
+  };
 };
 
 Node.prototype.isEdge = function(node) {

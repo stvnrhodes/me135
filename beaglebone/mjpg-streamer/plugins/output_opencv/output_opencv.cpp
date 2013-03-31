@@ -105,6 +105,7 @@ void *worker_thread(void *arg)
 
     int width = 640;
     int height = 480;
+    clock_t start, mid, end;
 
     Vision cv_runner;
     /* set cleanup handler to cleanup allocated ressources */
@@ -115,6 +116,7 @@ void *worker_thread(void *arg)
 
         pthread_mutex_lock(&pglobal->in[input_number].db);
         pthread_cond_wait(&pglobal->in[input_number].db_update, &pglobal->in[input_number].db);
+        start = clock();
         DBG("getting sizes\n");
 
         /* Get sizes */
@@ -158,16 +160,16 @@ void *worker_thread(void *arg)
         pthread_mutex_unlock(&pglobal->in[input_number].db);
         DBG("Width:%d, Height:%d\n", width, height);
         cv::Mat img(height, width, CV_8UC3, decompressed, width * 3 * sizeof(char));
+        mid = clock();
         DBG("Made the mat!\n");
-        cv_runner.loop(img);
-        // cv::imwrite("image.jpg", img);
+        ok = cv_runner.loop(img);
+        end = clock();
         DBG("Wrote the image!\n");
+        DBG("Decompression time: %f\n",((float)mid-start)/CLOCKS_PER_SEC);
+        DBG("OpenCV time: %f\n",((float)end-mid)/CLOCKS_PER_SEC);
 
-
-        /* if specified, wait now */
-        if(delay > 0) {
-            usleep(1000 * delay);
-        }
+        // Wait 100ms so there's less overwhelming of data
+        usleep(100000);
     }
 
     /* cleanup now */
