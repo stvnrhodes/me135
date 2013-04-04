@@ -6,6 +6,11 @@ lib-cov
 *.out
 *.pid
 *.gz
+*.so
+*.o
+*._*
+beaglebone/node_modules
+experiments
 
 pids
 logs

@@ -124,7 +124,6 @@ function wsHandler(ws, socket, uart) {
   uart.on('data', function(data) {
     log.verbose("UART data received: " + data);
     try {
-      data = data.split(',');
       ws.send(JSON.stringify(data));
     } catch(e) {
       log.warn("UART: " + e);
