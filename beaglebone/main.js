@@ -122,7 +122,7 @@ function wsHandler(ws, socket, uart) {
   });
 
   uart.on('data', function(data) {
-    log.verbose("UART data received: " + data);
+    log.info("UART data received: " + data);
     try {
       ws.send(JSON.stringify(data));
     } catch(e) {
@@ -131,7 +131,7 @@ function wsHandler(ws, socket, uart) {
   });
 
   function sendCvData(data) {
-    log.info('OpenCV data received: ' + data);
+    log.verbose('OpenCV data received: ' + data);
     try {
       var msg = JSON.parse(data);
       if (msg.id === 'moments') {
@@ -185,5 +185,12 @@ function randomMaze (ws) {
         clearInterval(mazeDrawer);
       }
     });
-  }, 500);
+    msg = {id:"ir", front:Math.random()*12};
+    ws.send(JSON.stringify(msg), function(error) {
+      if (error) {
+        log.error("Websocket " + error);
+        clearInterval(mazeDrawer);
+      }
+    });
+  }, 100);
 }

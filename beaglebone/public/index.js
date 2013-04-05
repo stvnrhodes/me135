@@ -17,7 +17,7 @@ function onLoad() {
   } else {
     ws = new WebSocket('ws://' + host);
   }
-  ws.onmessage = onMessage;
+  ws.onmessage = wsHandler();
   var speed = 5;
   $('#livefeed').css('background-image','url(\'http://'+host+':8081/?action=stream\')');
   // $('#livefeed').attr('src','http://'+host+':8081/?action=stream');
@@ -75,28 +75,34 @@ function onLoad() {
   }
 }
 
-function onMessage(event) {
-  data = JSON.parse(event.data);
-  if (data.id === 'b') {
-    buttonText = $('#buttonText');
-    if (data.val) {
-      buttonText.html("not pressed");
-    } else {
-      buttonText.html("pressed");
+function wsHandler() {
+  var plot = new Plot('#graph');
+  return function(event) {
+    data = JSON.parse(event.data);
+    if (data.id === 'b') {
+      buttonText = $('#buttonText');
+      if (data.val) {
+        buttonText.html("not pressed");
+      } else {
+        buttonText.html("pressed");
+      }
+    } else if (data.id === 'ctr') {
+      $('#counterText').html(data.val.toString());
+    } else if (data.id === 'e') {
+      $('#lEnc').html(data[1]);
+      $('#rEnc').html(data[2]);
+    } else if (data.id === 'maze') {
+      var maze = new Maze(data.maze);
+      var cell = new Cell(data.cell, maze);
+      drawMaze(maze, cell, $('#robopath')[0]);
+    } else if (data.id === 'moments') {
+      var x = data.m10/data.m00;
+      var y = data.m01/data.m00;
+      drawCircle(x, y, Math.sqrt(data.m00)/20, $('#livefeed')[0]);
+    } else if (data.id === 'ir') {
+      plot.push(data.front,0);
+      plot.draw();
     }
-  } else if (data.id === 'ctr') {
-    $('#counterText').html(data.val.toString());
-  } else if (data.id === 'e') {
-    $('#lEnc').html(data[1]);
-    $('#rEnc').html(data[2]);
-  } else if (data.id === 'maze') {
-    var maze = new Maze(data.maze);
-    var cell = new Cell(data.cell, maze);
-    drawMaze(maze, cell, $('#robopath')[0]);
-  } else if (data.id === 'moments') {
-    var x = data.m10/data.m00;
-    var y = data.m01/data.m00;
-    drawCircle(x, y, Math.sqrt(data.m00)/20, $('#livefeed')[0]);
   }
 }
 
@@ -258,3 +264,4 @@ function feedClick(evt) {
   coords.id = "pic_xy";
   wsSend(coords);
 }
+

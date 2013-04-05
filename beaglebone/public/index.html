@@ -3,14 +3,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-<title>ME135 Kickass Project</title>
+  <title>ME135 Kickass Project</title>
+  <link rel="stylesheet" href="css/styles.css" type="text/css" />
+  <script language="javascript" type="text/javascript" src="jquery.min.js"></script>
+  <script language="javascript" type="text/javascript" src="plot.js"></script>
+  <script language="javascript" type="text/javascript" src="flot.min.js"></script>
+  <script language="javascript" type="text/javascript" src="utils.js"></script>
+  <script language="javascript" type="text/javascript" src="maze.js"></script>
+  <script language="javascript" type="text/javascript" src="index.js"></script>
 </head>
 
-<link rel="stylesheet" href="css/styles.css" type="text/css" />
-<script src="jquery-1.9.1.min.js"></script>
-<script src="utils.js"></script>
-<script src="maze.js"></script>
-<script src="index.js"></script>
 
 <body onload="onLoad()">
   <noscript>Javascript is disabled, nothing will work</noscript>
@@ -52,6 +54,7 @@
           <td>Right Encoder Count:</td>
           <td id="rEnc">0</td>
       </table>
+      <div id="graph" style="width:600px;height:300px;"></div>
       <span id="mazeCoord">Click a cell!</span><br>
       <input type="button" id="resetEncoder" value="Reset Encoder Count">
     </div>
