@@ -145,7 +145,7 @@ function tripleHandler(ws, socket, uart) {
 
   ws.on('message', function(data, flags) {
     if (!flags.binary) {
-      log.info("Websocket message:" + data);
+      log.verbose("Websocket message:" + data);
       var msg = JSON.parse(data);
       if (msg.id === 'led') {
         log.info("Toggling LED " + msg.num);
@@ -156,7 +156,7 @@ function tripleHandler(ws, socket, uart) {
         } else if (msg.dir === 'l' || msg.dir === 'r') {
           cell.turn(msg.dir);
         }
-        uart.write('g' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
+        uart.write('m' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
       } else if (msg.id === 'enc') {
         uart.write('e'+"\n");
       } else if (msg.id == 'pic_xy') {

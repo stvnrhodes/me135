@@ -55,7 +55,7 @@ function onLoad() {
     $(document).keyup( function(event) {
       var k = event.keyCode;
       if ( k === 87 || k === 65 || k === 83 || k === 68 ) {  // 'WASD'
-        //wsSend({ id:'move', dir:'s', spd:0 });
+        wsSend({ id:'move', dir:'s', spd:0 });
       }
     });
     $('#Cam').click(function () {
