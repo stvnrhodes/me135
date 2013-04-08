@@ -18,10 +18,11 @@
   <noscript>Javascript is disabled, nothing will work</noscript>
   <div id="sidebar">
     <hgroup>
-      <h2><b id="developer-percentage">00%</b> <span id="developer-label">Sensor 1</span></h2>
-      <h2><b id="ux-percentage">00%</b> <span id="ux-label">Sensor 2</span></h2>
-      <h2><b id="strategy-percentage">00%</b> <span id="strategy-label">Sensor 3</span></h2>
-      <h2><b id="other-percentage">00%</b> <span id="other-label">Sensor 4</span></h2>
+      <h2><b id="ir-front-number">0 in</b> <span id="ir-front-label">Front IR</span></h2>
+      <h2><b id="ir-left-number">0 in</b> <span id="ir-left-label">Left IR</span></h2>
+      <h2><b id="ir-right-number">0 in</b> <span id="ir-right-label">Right IR</span></h2>
+      <h2><b id="enc-left-number">0 f/s</b> <span id="enc-left-label">Left Speed</span></h2>
+      <h2><b id="enc-right-number">0 f/s</b> <span id="enc-right-label">Right Speed</span></h2>
     </hgroup>
   </div>
   <section id="main-content-container">
@@ -30,7 +31,7 @@
       <h4>Kyle Tse, Anna Lee, Spencer Wong, Austin Chang, Steven Rhodes, Kevin Yu</h4>
     </div>
     <div class="wrapper" id="livefeed-div">
-      <canvas id="livefeed" width="640" height="480">
+      <canvas id="livefeed" width="320" height="240">
         No canvas, so no livefeed!
       </canvas>
     </div>
@@ -40,28 +41,31 @@
       </canvas>
     </div>
     <div id="controls-div">
+      <span id="mazeCoord">Click a cell!</span><br>
       To control direction, use WASD. To control speed, use XZ.
       <table border="0">
         <tr>
           <td>Speed(0-10):</td>
           <td id="speed">0</td>
         </tr>
-        <tr>
+        <!-- <tr>
           <td>Left Encoder Count:</td>
           <td id="lEnc">0</td>
-        </tr>
+        </tr> -->
         <tr>
           <td>Right Encoder Count:</td>
           <td id="rEnc">0</td>
       </table>
-      <div id="graph" style="width:600px;height:300px;"></div>
-      <span id="mazeCoord">Click a cell!</span><br>
-      <input type="button" id="resetEncoder" value="Reset Encoder Count">
+      <h1>Encoder Speeds</h1>
+      <div id="enc-graph" style="width:600px;height:300px;"></div>
+      <h1>Distance Sensors</h1>
+      <div id="ir-graph" style="width:600px;height:300px;"></div>
     </div>
     <div>
-      <input type="button" id="Cam" value="Take Picture!">
       <input type="button" id="LED1" value="LED1">
       <input type="button" id="LED2" value="LED2">
+      <input type="button" id="LED3" value="LED3">
+      <input type="button" id="LED4" value="LED4">
     </div>
   </section>
   <img></img>

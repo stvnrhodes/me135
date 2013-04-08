@@ -1,11 +1,14 @@
 // Set up logging first
 var log = require('winston');
-log.add(log.transports.File, { filename: 'beaglebone.log' });
+// log.add(log.transports.File, { filename: 'beaglebone.log', timestamp:true });
+var fs = require('fs');
+fs.unlink('public/log.log', function() {
+  log.add(log.transports.File, { filename: 'public/log.log', timestamp:true });
+});
 log.info("Starting program");
 
 var express = require('express');
 var http = require('http');
-var fs = require('fs');
 var url = require('url');
 var WebSocketServer = require('ws').Server;
 var serialport = require('serialport');
@@ -22,9 +25,9 @@ var Cell = require('./public/maze.js').Cell;
 // Create the socket for the OpenCV IPC, and return it in the callback
 function makeSocket(callback) {
   var socket = net.createServer(function(connection) { //'connection' listener
-    log.info('server connected');
+    log.info('webcam connected');
     connection.on('end', function() {
-      log.info('server disconnected');
+      log.info('webcam disconnected');
     });
     callback(null, connection);
   });
@@ -52,25 +55,38 @@ async.parallel({
     socket: makeSocket,
     uart: makeUart },
   function(err, r) {
+    if (err) {
+      log.error(err);
+      vision.kill();
+      process.exit();
+    }
     runServer(r.socket, r.uart);
 });
 
 // Starts mjpg_streamer, taking in from camera and outputting to
 // a web server and OpenCV
 var cmd = 'mjpg-streamer/mjpg_streamer';
-var args = ['-i','mjpg-streamer/input_uvc.so -r 640x480',
+// Resolution is lower so we can process faster
+var args = ['-i','mjpg-streamer/input_uvc.so -r 320x240',
             '-o','mjpg-streamer/output_http.so -p 8081',
             '-o','mjpg-streamer/output_opencv.so']
-var vision = spawn(cmd, args);
-vision.stdout.on('data', function (data) {
-  log.info('stdout: ' + data);
-});
-vision.stderr.on('data', function (data) {
-  log.warn('stderr: ' + data);
-});
-vision.on('close', function (code) {
-  log.info('child process exited with code ' + code);
-});
+// For global access
+var vision;
+function monitorProcess(spawned) {
+  vision = spawned;
+  spawned.stdout.on('data', function (data) {
+    log.info('stdout: ' + data);
+  });
+  spawned.stderr.on('data', function (data) {
+    log.warn('stderr: ' + data);
+  });
+  spawned.on('close', function (code) {
+    log.info('child process exited with code ' + code);
+    // log.info('attemting to restart child');
+    // monitorProcess(spawn(cmd, args));
+  });
+}
+monitorProcess(spawn(cmd, args));
 
 // Cleanup code for when killed with C-c
 process.on( 'SIGINT', function() {
@@ -116,20 +132,28 @@ function wsHandler(ws, socket, uart) {
       } else if (msg.id === 'enc') {
         uart.write('e'+"\n");
       } else if (msg.id == 'pic_xy') {
-        socket.write(data);
+        try {
+          socket.write(data);
+        } catch(e) {
+          log.error("Socket fail: " + e);
+        }
       }
     }
   });
 
-  uart.on('data', function(data) {
-    log.info("UART data received: " + data);
+  uart.on('data', sendUartData);
+  function sendUartData(data) {
+    // Data from uart is in JSON
+    log.verbose("UART data received: " + data);
     try {
-      ws.send(JSON.stringify(data));
+      ws.send(data);
     } catch(e) {
       log.warn("UART: " + e);
+      uart.removeListener('data', sendUartData);
     }
-  });
+  };
 
+  socket.on('data', sendCvData);
   function sendCvData(data) {
     log.verbose('OpenCV data received: ' + data);
     try {
@@ -137,7 +161,7 @@ function wsHandler(ws, socket, uart) {
       if (msg.id === 'moments') {
         ws.send(data, function(error) {
           if (error) {
-            log.error('ws: ' + error);
+            log.warn('ws: ' + error);
             socket.removeListener('data', sendCvData);
           }
         });
@@ -147,7 +171,6 @@ function wsHandler(ws, socket, uart) {
     }
   }
 
-  socket.on('data', sendCvData);
   // Included for testing
   randomMaze(ws);
 }
@@ -179,13 +202,6 @@ function randomMaze (ws) {
     var c = new Cell(i, j, dir, m);
     c.addWall('L');
     var msg = {id:'maze', maze:m.getData(), cell:c.getData()};
-    ws.send(JSON.stringify(msg), function(error) {
-      if (error) {
-        log.error("Websocket " + error);
-        clearInterval(mazeDrawer);
-      }
-    });
-    msg = {id:"ir", front:Math.random()*12};
     ws.send(JSON.stringify(msg), function(error) {
       if (error) {
         log.error("Websocket " + error);

@@ -25,23 +25,23 @@ Vision::~Vision(void) {
 
 cv::Vec3b Vision::_getPixel(const cv::Mat img, const int x, const int y) {
   // Convert the image into an HSV image
-  // cv::Mat imgHSV;
-  // cv::cvtColor(img, imgHSV, CV_RGB2HSV);
-  return img.at<cv::Vec3b>(y,x);
+  cv::Mat imgHSV;
+  cv::cvtColor(img, imgHSV, CV_RGB2HSV);
+  return imgHSV.at<cv::Vec3b>(y,x);
 }
 
 void Vision::_thresholdImage(const cv::Mat img, const cv::Vec3b pixel, cv::Mat &output) {
   cv::Scalar low(pixel[0] - 10, pixel[1] - 10, pixel[2] - 10);
   cv::Scalar high(pixel[0] + 10, pixel[1] + 10, pixel[2] + 10);
-  // cv::Mat imgHSV;
-  // cv::cvtColor(img, imgHSV, CV_RGB2HSV);
-  cv::inRange(img, low, high, output);
+  cv::Mat imgHSV;
+  cv::cvtColor(img, imgHSV, CV_RGB2HSV);
+  cv::inRange(imgHSV, low, high, output);
 }
 
 int Vision::loop(cv::Mat src) {
   char buffer[80];
   int len = 0;
-  cv::blur( src, src, cv::Size( BLUR_FACTOR, BLUR_FACTOR ), cv::Point(-1,-1) );
+  // cv::blur( src, src, cv::Size( BLUR_FACTOR, BLUR_FACTOR ), cv::Point(-1,-1) );
   ioctl(_sockfd, FIONREAD, &len);
   if (len > 0) {
     len = read(_sockfd, buffer, len);
@@ -72,17 +72,10 @@ int Vision::loop(cv::Mat src) {
   _thresholdImage(src, _color, src);
   cv::Moments moments = cv::moments(src);
 
-  // Json::Value ret_msg;
-  // ret_msg["id"] = "moments";
-  // ret_msg["m10"] = moments.m10;
-  // ret_msg["m01"] = moments.m01;
-  // ret_msg["m00"] = moments.m00;
-  // Json::StyledWriter writer;
-  // std::string outputConfig = writer.write( ret_msg );
   std::ostringstream output_stream;
   output_stream << "{\"id\":\"moments\",\"m10\":" << moments.m10 <<
                    ",\"m01\":" << moments.m01 <<
-                   ",\"m00\":" << moments.m00 << "}";
+                   ",\"m00\":" << moments.m00 << "}" << std::endl;
   std::string output = output_stream.str();
   if (write(_sockfd, output.c_str(), output.length()) < 0) {
     perror("writing on stream socket");

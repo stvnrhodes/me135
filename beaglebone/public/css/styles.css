@@ -1,5 +1,5 @@
 body {
-  background: #000 url('../site-img/textured_grey.jpg') repeat left top;
+  /*background: #000 url('../site-img/textured_grey.jpg') repeat left top;*/
 }
 
 #sidebar{
@@ -49,6 +49,7 @@ body {
 #sidebar h2 span{
   font-size: 17px;
   display: block;
+  font-family: 'Courier New';
   /*font-family: 'Nunito', sans-serif;;*/
   font-weight: normal;
   text-align: center;
@@ -57,35 +58,43 @@ body {
 }
 
 
-#sidebar span#strategy-label{
+#sidebar span#ir-front-label{
   color: #d12b75;
 }
 
-#sidebar span#ux-label{
+#sidebar span#ir-left-label{
   color: #f3b01a;
 }
 
-#sidebar span#developer-label{
+#sidebar span#ir-right-label{
   color: #2098d0;
 }
 
-#sidebar span#other-label{
+#sidebar span#enc-left-label{
+  color: #ba6fe7;
+}
+
+#sidebar span#enc-right-label{
   color: #51b247;
 }
 
-#strategy-percentage{
+#ir-front-number{
     box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #d12b75, 0 1px 0px #333; /*//*/
 }
 
-#ux-percentage{
+#ir-left-number{
     box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #f3b01a, 0 1px 0px #333; /*//*/
 }
 
-#developer-percentage{
+#ir-right-number{
     box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #2098d0, 0 1px 0px #333; /*//*/
 }
 
-#other-percentage{
+#enc-left-number{
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #ba6fe7, 0 1px 0px #333; /*//*/
+}
+
+#enc-right-number{
     box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #51b247, 0 1px 0px #333; /*//*/
 }
 

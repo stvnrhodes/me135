@@ -103,8 +103,8 @@ void *worker_thread(void *arg)
     int ok = 1, frame_size = 0, decompressed_size = 0;
     unsigned char *tmp_decompressed = NULL;
 
-    int width = 640;
-    int height = 480;
+    int width = 320;
+    int height = 240;
     clock_t start, mid, end;
 
     Vision cv_runner;

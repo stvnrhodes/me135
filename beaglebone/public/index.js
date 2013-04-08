@@ -61,12 +61,10 @@ function onLoad() {
     $('#Cam').click(function () {
       $('img').attr('src', "cam.jpg");
     } );
-    $('#LED1').click(function () {
-      wsSend({ id:'led', num: 1 } );
-    });
-    $('#LED2').click ( function() {
-      wsSend({ id:'led', num: 2 } );
-    });
+    $('#LED1').click(function () { wsSend({ id:'led', num: 1 } ); });
+    $('#LED2').click( function() { wsSend({ id:'led', num: 2 } ); });
+    $('#LED3').click( function() { wsSend({ id:'led', num: 3 } ); });
+    $('#LED4').click( function() { wsSend({ id:'led', num: 4 } ); });
     $('#resetEncoder').click ( function () {
       wsSend({ id:'enc', action: 'rst' });
     });
@@ -76,9 +74,10 @@ function onLoad() {
 }
 
 function wsHandler() {
-  var plot = new Plot('#graph');
+  var ir_graph = new Plot('#ir-graph', ["Front", "Left", "Right"]);
+  var enc_graph = new Plot('#enc-graph', ["Left", "Right"]);
   return function(event) {
-    data = JSON.parse(event.data);
+    var data = JSON.parse(event.data);
     if (data.id === 'b') {
       buttonText = $('#buttonText');
       if (data.val) {
@@ -88,9 +87,12 @@ function wsHandler() {
       }
     } else if (data.id === 'ctr') {
       $('#counterText').html(data.val.toString());
-    } else if (data.id === 'e') {
-      $('#lEnc').html(data[1]);
-      $('#rEnc').html(data[2]);
+    } else if (data.id === 'encoder') {
+      $('#enc-left-number').html(data.left_encoder.toFixed(2) + " f/s");
+      $('#enc-right-number').html(data.right_encoder.toFixed(2) + " f/s");
+      enc_graph.push(data.left_encoder, 0);
+      enc_graph.push(data.right_encoder, 1);
+      enc_graph.draw()
     } else if (data.id === 'maze') {
       var maze = new Maze(data.maze);
       var cell = new Cell(data.cell, maze);
@@ -100,8 +102,13 @@ function wsHandler() {
       var y = data.m01/data.m00;
       drawCircle(x, y, Math.sqrt(data.m00)/20, $('#livefeed')[0]);
     } else if (data.id === 'ir') {
-      plot.push(data.front,0);
-      plot.draw();
+      $('#ir-front-number').html(data.front.toFixed(2) + " in");
+      $('#ir-left-number').html(data.left.toFixed(2) + " in");
+      $('#ir-right-number').html(data.right.toFixed(2) + " in");
+      ir_graph.push(data.front,0);
+      ir_graph.push(data.left,1);
+      ir_graph.push(data.right,2);
+      ir_graph.draw();
     }
   }
 }
