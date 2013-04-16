@@ -6,12 +6,17 @@ lib-cov
 *.out
 *.pid
 *.gz
+<<<<<<< HEAD
 *.so
 *.o
 *._*
 beaglebone/node_modules
 experiments
 
+=======
+*.metadata
+experiments/*
+>>>>>>> Updating git
 pids
 logs
 results
