@@ -75,8 +75,8 @@ int main() {
       switch (msg[0]) {
         // gfXX - go direction for XX spaces
         case 'g': {
-          char dir = msg[1];
-          int spd = msg[2] * 10 + msg[3];
+//          char dir = msg[1];
+//          int spd = msg[2] * 10 + msg[3];
           // TODO: Implement method
           break;
         }
