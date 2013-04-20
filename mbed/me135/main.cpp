@@ -1,12 +1,7 @@
 // Print "Hello World" to the PC
 
 #include "mbed.h"
-#include "Claw.h"
-#include "DriveTrain.h"
-#include "BeagleBone.h"
-#include "Shooter.h"
-#include "IRSensor.h"
-#include "QEI.h"
+#include "me135.h"
 #define VERBOSE
 #define KEY(x,y) #x ":" #y
 static const int kPuslesPerRotation = 333;
@@ -62,14 +57,47 @@ void coast(void) {
   left_drive = 0;
 }
 
+
 int main() {
+  Timer simulation_timer;
+  simulation_timer.start();
   Timeout motor_safety;
   encTimer.start();
   Timer ir_timer;
   ir_timer.start();
+  Modes mode = WAITING;
+  x_coord
+  Directions orientation;
 
   char msg[MAX_MSG_SIZE];
   for (;;) {
+	switch (mode) {
+  	case WAITING:
+  	  simulation_timer.reset();
+  	  break;
+  	case MOVE_FORWARD:
+  	  if (simulation_timer.read() > 0.5) {
+
+  	    mode = WAITING;
+  	  }
+  	  break;
+  	case TURN_RIGHT:
+      if (simulation_timer.read() > 0.5) {
+        orientation = real_direction[orientation][RIGHT];
+        mode = WAITING;
+      }
+  	  break;
+  	case TURN_LEFT:
+      if (simulation_timer.read() > 0.5) {
+
+        orientation = real_direction[orientation][LEFT];
+        mode = WAITING;
+      }
+  	  break;
+  	case ERROR:
+  	default:
+  	  break;
+	}
     if (bone.readable()) {
       bone.read(msg, MAX_MSG_SIZE);
       switch (msg[0]) {

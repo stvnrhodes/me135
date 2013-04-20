@@ -22,6 +22,15 @@ class Shooter {
    */
   int adjust(bool up);
 
+  float up(void) {
+    motor_ = motor_.read() + 0.05;
+    return motor_;
+  }
+  float down(void) {
+    motor_ = motor_ - 0.05;
+    return motor_.read();
+  }
+
   /**
    * Spins up motor for shooting
    */

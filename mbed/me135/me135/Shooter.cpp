@@ -4,8 +4,8 @@ namespace me135 {
 static const int kFiringTime = 200000; // in us
 static const int kRecockingTime = 200000; // in us
 static const int kServoTime = 20000; // in us
-static const int kServoFiring = 1000; // in us
-static const int kServoIdle = 1500; // in us
+static const int kServoFiring = 1425; // in us
+static const int kServoIdle = 1635; // in us
 
 Shooter::Shooter(PinName servo, PinName motor): servo_(servo), motor_(motor) {
   motor_ = 0;
