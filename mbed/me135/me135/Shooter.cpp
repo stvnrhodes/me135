@@ -7,8 +7,10 @@ static const int kServoTime = 20000; // in us
 static const int kServoFiring = 1425; // in us
 static const int kServoIdle = 1635; // in us
 
-Shooter::Shooter(PinName servo, PinName motor): servo_(servo), motor_(motor) {
-  motor_ = 0;
+Shooter::Shooter(PinName servo, PinName motor_fwd, PinName motor_rev):
+    servo_(servo), fwd_(motor_fwd), rev_(motor_rev) {
+  fwd_ = 0;
+  rev_ = 0;
   servo_pos_ = kServoIdle;
   servo_ticker_.attach_us(this, &Shooter::on_, kServoTime);
 }
@@ -23,11 +25,11 @@ int Shooter::adjust(bool up) {
 }
 
 void Shooter::spinup(void) {
-  motor_ = 1;
+  fwd_ = 1;
 }
 
 void Shooter::spindown(void){
-  motor_ = 0;
+  fwd_ = 0;
 }
 
 void Shooter::fire(void) {

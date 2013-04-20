@@ -13,9 +13,10 @@ class Shooter {
    * Constructor
    *
    * @param servo Servo pin, any GPIO
-   * @param motor Motor pin, must be PWM
+   * @param motor_fwd Motor forward pin, must be PWM
+   * @param motor_fwd Motor forward pin, must be PWM
    */
-  Shooter(PinName servo, PinName motor);
+  Shooter(PinName servo, PinName motor_fwd, PinName motor_rev);
 
   /** For manual adjustment
    *
@@ -23,12 +24,12 @@ class Shooter {
   int adjust(bool up);
 
   float up(void) {
-    motor_ = motor_.read() + 0.05;
-    return motor_;
+    fwd_ = fwd_.read() + 0.05;
+    return fwd_;
   }
   float down(void) {
-    motor_ = motor_ - 0.05;
-    return motor_.read();
+    fwd_ = fwd_ - 0.05;
+    return fwd_.read();
   }
 
   /**
@@ -59,7 +60,8 @@ class Shooter {
   void recock_(void);
   void done_(void);
   DigitalOut servo_;
-  PwmOut motor_;
+  PwmOut fwd_;
+  PwmOut rev_;
   Ticker servo_ticker_;
   Timeout servo_timeout_;
   Timeout firing_timeout_;

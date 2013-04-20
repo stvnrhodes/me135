@@ -17,7 +17,7 @@
 
 const int fake_maze_rows = 4;
 const int fake_maze_columns = 4;
-const bool fake_maze[][][] = {{{1,0,0,1},{1,0,1,0},{1,0,0,0},{1,1,0,0}},
+const bool fake_maze[4][4][4] = {{{1,0,0,1},{1,0,1,0},{1,0,0,0},{1,1,0,0}},
                               {{0,1,1,0},{1,1,0,1},{0,1,1,1},{0,0,0,1}},
                               {{1,1,0,1},{0,0,1,1},{1,0,0,0},{0,1,1,0}},
                               {{0,0,1,1},{1,0,1,0},{0,0,1,0},{1,1,1,0}}};
@@ -38,7 +38,7 @@ typedef enum {
 	LEFT=3
 } Directions;
 // real_direction[orientation][direction]
-const Directions real_direction[][] = {{UP, RIGHT, DOWN, LEFT},
+const Directions real_direction[4][4] = {{UP, RIGHT, DOWN, LEFT},
                                        {RIGHT, DOWN, LEFT, UP},
                                        {DOWN, LEFT, UP, RIGHT},
                                        {LEFT, UP, RIGHT, DOWN}};

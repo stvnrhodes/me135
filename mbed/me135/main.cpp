@@ -6,21 +6,20 @@
 #define KEY(x,y) #x ":" #y
 static const int kPuslesPerRotation = 333;
 
-me135::BeagleBone bone(p9, p10);
 DigitalOut led1(LED1);
 DigitalOut led2(LED2);
 DigitalOut led3(LED3);
 DigitalOut led4(LED4);
-DigitalIn but(p5);
-me135::Shooter shooter(p25, p26);
-me135::Claw claw(p20);
-me135::DriveTrain right_drive(p22, p21);
-me135::DriveTrain left_drive(p23, p24);
+me135::BeagleBone bone(p9, p10);
+QEI right_encoder(p11, p12, NC, kPuslesPerRotation);
+QEI left_encoder(p13, p14, NC, kPuslesPerRotation);
 me135::IRSensor front(p15);
 me135::IRSensor left(p16);
 me135::IRSensor right(p17);
-QEI left_encoder(p27, p28, NC, kPuslesPerRotation);
-QEI right_encoder(p29, p30, NC, kPuslesPerRotation);
+me135::DriveTrain right_drive(p21, p22);
+me135::DriveTrain left_drive(p23, p24);
+me135::Shooter shooter(p28, p25, p26);
+me135::Claw claw(p29);
 Timer encTimer;
 
 const int MAX_MSG_SIZE = 10;
@@ -66,7 +65,7 @@ int main() {
   Timer ir_timer;
   ir_timer.start();
   Modes mode = WAITING;
-  x_coord
+//  x_coord
   Directions orientation;
 
   char msg[MAX_MSG_SIZE];
@@ -77,7 +76,16 @@ int main() {
   	  break;
   	case MOVE_FORWARD:
   	  if (simulation_timer.read() > 0.5) {
-
+        switch(orientation) {
+          case UP:
+            break;
+          case DOWN:
+            break;
+          case LEFT:
+            break;
+          case RIGHT:
+            break;
+        }
   	    mode = WAITING;
   	  }
   	  break;
@@ -163,8 +171,8 @@ int main() {
       char buffer[256];
       char len;
       len = sprintf(buffer, "{" KEY("id","ir")
-                            "," KEY("front", %f) 
-                            "," KEY("left",%f) 
+                            "," KEY("front", %f)
+                            "," KEY("left",%f)
                             "," KEY("right",%f) "}\n",
                             front.read(), left.read(), right.read());
       bone.write(buffer, len);
