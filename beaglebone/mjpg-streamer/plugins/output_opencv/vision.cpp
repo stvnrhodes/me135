@@ -80,5 +80,6 @@ int Vision::loop(cv::Mat src) {
   if (write(_sockfd, output.c_str(), output.length()) < 0) {
     perror("writing on stream socket");
   }
+  fflush(NULL);
   return 1;
 }
