@@ -56,6 +56,24 @@ void coast(void) {
   left_drive = 0;
 }
 
+void print_walls(Directions orientation, int xc, int yc) {
+  const bool *walls = fake_maze[xc][yc];
+  bool left = walls[real_direction[orientation][LEFT]];
+  bool front = walls[orientation];
+  bool right = walls[real_direction[orientation][RIGHT]];
+
+  char buffer[256];
+  char len;
+  len = sprintf(buffer, "{" KEY("id", "maze_walls")
+                        "," KEY("left", %d)
+                        "," KEY("center", %d)
+                        "," KEY("right", %d)
+                        "," KEY("x", %d)
+                        "," KEY("y", %d)
+                        "," KEY("dir", %d) "}\n",
+                left, front, right, xc, yc, orientation);
+  bone.write(buffer, len);
+}
 
 int main() {
   Timer simulation_timer;
@@ -65,55 +83,93 @@ int main() {
   Timer ir_timer;
   ir_timer.start();
   Modes mode = WAITING;
-//  x_coord
-  Directions orientation;
+  int xc = 0;
+  int yc = 0;
+  Directions orientation = UP;
 
   char msg[MAX_MSG_SIZE];
   for (;;) {
-	switch (mode) {
-  	case WAITING:
-  	  simulation_timer.reset();
-  	  break;
-  	case MOVE_FORWARD:
-  	  if (simulation_timer.read() > 0.5) {
-        switch(orientation) {
-          case UP:
-            break;
-          case DOWN:
-            break;
-          case LEFT:
-            break;
-          case RIGHT:
-            break;
+    switch (mode) {
+      case WAITING:
+        simulation_timer.reset();
+        break;
+      case MOVE_FORWARD:
+        if (simulation_timer.read() > 0.1) {
+          switch(orientation) {
+            case UP:
+              if (fake_maze[xc][yc][UP] || xc == 0) {
+                printf("We just ran into a wall\r\n");
+              } else {
+                xc -= 1;
+              }
+              break;
+            case DOWN:
+              if (fake_maze[xc][yc][DOWN] || xc == FAKE_MAZE_ROWS - 1) {
+                printf("We just ran into a wall\r\n");
+              } else {
+                xc += 1;
+              }
+              break;
+            case LEFT:
+              if (fake_maze[xc][yc][LEFT] || yc == 0) {
+                printf("We just ran into a wall\r\n");
+              } else {
+                yc -= 1;
+              }
+              break;
+            case RIGHT:
+              if (fake_maze[xc][yc][RIGHT] || yc == FAKE_MAZE_COLUMNS - 1) {
+                printf("We just ran into a wall\r\n");
+              } else {
+                yc += 1;
+              }
+              break;
+          }
+          print_walls(orientation, xc, yc);
+          mode = WAITING;
         }
-  	    mode = WAITING;
-  	  }
-  	  break;
-  	case TURN_RIGHT:
-      if (simulation_timer.read() > 0.5) {
-        orientation = real_direction[orientation][RIGHT];
-        mode = WAITING;
-      }
-  	  break;
-  	case TURN_LEFT:
-      if (simulation_timer.read() > 0.5) {
-
-        orientation = real_direction[orientation][LEFT];
-        mode = WAITING;
-      }
-  	  break;
-  	case ERROR:
-  	default:
-  	  break;
-	}
+        break;
+      case TURN_RIGHT:
+        if (simulation_timer.read() > 0.1) {
+          orientation = real_direction[orientation][RIGHT];
+          print_walls(orientation, xc, yc);
+          mode = WAITING;
+        }
+        break;
+      case TURN_LEFT:
+        if (simulation_timer.read() > 0.1) {
+          orientation = real_direction[orientation][LEFT];
+          print_walls(orientation, xc, yc);
+          mode = WAITING;
+        }
+        break;
+      case ERROR:
+      default:
+        break;
+    }
     if (bone.readable()) {
       bone.read(msg, MAX_MSG_SIZE);
       switch (msg[0]) {
+        // Get walls
+        case 'w': {
+          print_walls(orientation, xc, yc);
+        }
         // gfXX - go direction for XX spaces
         case 'g': {
-//          char dir = msg[1];
-//          int spd = msg[2] * 10 + msg[3];
-          // TODO: Implement method
+          char dir = msg[1];
+          switch(dir) {
+            case 'f':
+              mode = MOVE_FORWARD;
+              break;
+            case 'r':
+              mode = TURN_RIGHT;
+              break;
+            case 'l':
+              mode = TURN_LEFT;
+              break;
+            default:
+              mode = WAITING;
+          }
           break;
         }
         // s - stop
@@ -181,9 +237,10 @@ int main() {
     if (encTimer.read_ms() > 250) {
       char buffer[256];
       char len;
-      len = sprintf(buffer, "{" KEY("id", "encoder") "," KEY("left_encoder", %d)
+      len = sprintf(buffer, "{" KEY("id", "encoder")
+                            "," KEY("left_encoder", %d)
                             "," KEY("right_encoder", %d) "}\n",
-                            left_encoder.getPulses(), right_encoder.getPulses());
+                    left_encoder.getPulses(), right_encoder.getPulses());
       bone.write(buffer, len);
       encTimer.reset();
     }
