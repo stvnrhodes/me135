@@ -55,7 +55,7 @@ function onLoad() {
     $(document).keyup( function(event) {
       var k = event.keyCode;
       if ( k === 87 || k === 65 || k === 83 || k === 68 ) {  // 'WASD'
-        wsSend({ id:'move', dir:'s', spd:0 });
+        //wsSend({ id:'move', dir:'s', spd:0 });
       }
     });
     $('#Cam').click(function () {
@@ -168,6 +168,7 @@ function drawMaze(maze, cell, canvas){
     if (wall_width === 0) {
       wall_width = 1;
     }
+    console.log(corners)
     var yOffset = (mazeSize === width ? BORDER / 2
                   : Math.floor(((height - width) * cellSize + BORDER)/2));
     var xOffset = (mazeSize === height ? BORDER / 2

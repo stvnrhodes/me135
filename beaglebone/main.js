@@ -113,13 +113,16 @@ function runServer (socket, uart) {
 
   var wss = new WebSocketServer({server: server});
   wss.on('connection', function (ws) {
-    wsHandler(ws, socket, uart);
+    tripleHandler(ws, socket, uart);
   });
 
 }
 
-function wsHandler(ws, socket, uart) {
+function tripleHandler(ws, socket, uart) {
   log.info("Running websockets");
+  var maze = new Maze();
+  var cell = new Cell(0, 0, 'N', maze);
+
   ws.on('message', function(data, flags) {
     if (!flags.binary) {
       log.info("Websocket message:" + data);
@@ -128,7 +131,12 @@ function wsHandler(ws, socket, uart) {
         log.info("Toggling LED " + msg.num);
         uart.write('l' + msg.num +'\n');
       } else if (msg.id === 'move') {
-        uart.write('m' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
+        if (msg.dir === 'f') {
+          cell.move(1);
+        } else if (msg.dir === 'l' || msg.dir === 'r') {
+          cell.turn(msg.dir);
+        }
+        uart.write('g' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
       } else if (msg.id === 'enc') {
         uart.write('e'+"\n");
       } else if (msg.id == 'pic_xy') {
@@ -145,6 +153,23 @@ function wsHandler(ws, socket, uart) {
   function sendUartData(data) {
     // Data from uart is in JSON
     log.verbose("UART data received: " + data);
+    var parsed = {}
+    try {
+      parsed = JSON.parse(data);
+    } catch(e) {
+      log.warn("UART is not JSON: " + e)
+    }
+    if (parsed.id === 'maze_walls') {
+      log.info(JSON.stringify(parsed));
+      if (parsed.left) { cell.addWall('L'); }
+      else { cell.addConnect('L'); }
+      if (parsed.center) { cell.addWall('F'); }
+      else { cell.addConnect('F'); }
+      if (parsed.right) { cell.addWall('R'); }
+      else { cell.addConnect('R'); }
+      var msg = {id:'maze', maze:maze.getData(), cell:cell.getData()};
+      data = JSON.stringify(msg);
+    }
     try {
       ws.send(data);
     } catch(e) {
@@ -152,6 +177,8 @@ function wsHandler(ws, socket, uart) {
       uart.removeListener('data', sendUartData);
     }
   };
+  // Get initial walls
+  uart.write('w')
 
   socket.on('data', sendCvData);
   function sendCvData(data) {
@@ -172,7 +199,7 @@ function wsHandler(ws, socket, uart) {
   }
 
   // Included for testing
-  randomMaze(ws);
+  // randomMaze(ws);
 }
 
 // Create a random maze and continually update it, useful for testing
