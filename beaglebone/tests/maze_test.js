@@ -59,3 +59,9 @@ assertEquals([2,5,Cell.dirTable['S']],c.getData(), "Got coordinates correctly")
 m = new Maze()
 m = new Maze(m.getData())
 assertEquals(m.getCorners(), [[0,0],[1,1]], "Boundaries are correct")
+m = new Maze()
+c = new Cell(0, 0, 'N', m);
+c.addConnect('L');
+c.addConnect('R');
+c.addWall('F');
+assertEquals(m.getCorners(), [[-1,-1],[1,2]], "Boundaries are correct");

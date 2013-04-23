@@ -30,7 +30,8 @@ Maze.prototype._parseAndAdd = function(maze_data) {
   // }
   for (i = 0; i < maze_data.maze.length; i++) {
     for (j = 0; j < maze_data.maze[i].length; j++) {
-      this._node(i+maze_data.x0,j+maze_data.y0)._parseAndAdd(maze_data.maze[i][j], this);
+      this._node(i+maze_data.x0,j+maze_data.y0)
+          ._parseAndAdd(maze_data.maze[i][j], this);
     }
   }
 };
@@ -233,7 +234,6 @@ Node.prototype.getWalls = function() {
   return thus.walls;
 };
 
-// Currently, the node will happily add a wall and an edge to another node
 Node.prototype.addWall = function(node) {
   this.walls.push(node);
   for (var i = 0; i < this.edges.length; i++) {
@@ -314,13 +314,13 @@ Cell.prototype.addWall = function(dir) {
   var x = this.x;
   var y = this.y;
   if (direction === 0) {
-    x === 0 ? x = this.maze.getHeight() : x = x - 1;
+    x = x - 1;
   } else if (direction === 1) {
-    y === 0 ? y = this.maze.getWidth() : y = y - 1;
+    y = y - 1;
   } else if (direction === 2) {
-    x === this.maze.getHeight() ? x = 0 : x = x + 1;
+    x = x + 1;
   } else if (direction === 3) {
-    y === this.maze.getWidth() ? y = 0 : y = y + 1;
+    y = y + 1;
   }
   this.maze.addWall(this.x, this.y, x, y);
 };
@@ -330,13 +330,13 @@ Cell.prototype.addConnect = function(dir) {
   var x = this.x;
   var y = this.y;
   if (direction === 0) {
-    x === 0 ? x = this.maze.getHeight() : x = x - 1;
+    x = x - 1;
   } else if (direction === 1) {
-    y === 0 ? y = this.maze.getWidth() : y = y - 1;
+    y = y - 1;
   } else if (direction === 2) {
-    x === this.maze.getHeight() ? x = 0 : x = x + 1;
+    x = x + 1;
   } else if (direction === 3) {
-    y === this.maze.getWidth() ? y = 0 : y = y + 1;
+    y = y + 1;
   }
   this.maze.addEdge(this.x, this.y, x, y);
 };
