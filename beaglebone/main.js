@@ -19,8 +19,10 @@ var async = require('async');
 var net = require('net');
 
 // Shared code with browser
-var Maze = require('./public/maze.js').Maze;
-var Cell = require('./public/maze.js').Cell;
+var Maze = require('./public/maze.verbose.js').Maze;
+var Cell = require('./public/maze.verbose.js').Cell;
+
+var MazeManager = require('./maze_manager.js').MazeManager;
 
 // Create the socket for the OpenCV IPC, and return it in the callback
 function makeSocket(callback) {
@@ -111,9 +113,27 @@ function runServer (socket, uart) {
   var server = http.createServer(app);
   server.listen(8080);
 
+  var maze_manager = new MazeManager();
+  uart.on('data', function(x){maze_manager.update(x)});
+  maze_manager.on('action', function(dir) {
+    console.log(dir)
+    uart.write('g' + dir + '\n');
+  })
+
   var wss = new WebSocketServer({server: server});
   wss.on('connection', function (ws) {
     tripleHandler(ws, socket, uart);
+    maze_manager.on('update', mazeData)
+    function mazeData(data) {
+      var msg = JSON.stringify({id:'maze', maze:data.maze.getData(),
+                                cell:data.cell.getData()});
+      try {
+        ws.send(msg);
+      } catch(e) {
+        log.warn("Failed to send data to ws");
+        maze_manager.removeListener(mazeData);
+      }
+    }
   });
 
 }
@@ -160,15 +180,15 @@ function tripleHandler(ws, socket, uart) {
       log.warn("UART is not JSON: " + e)
     }
     if (parsed.id === 'maze_walls') {
-      log.info(JSON.stringify(parsed));
-      if (parsed.left) { cell.addWall('L'); }
-      else { cell.addConnect('L'); }
-      if (parsed.center) { cell.addWall('F'); }
-      else { cell.addConnect('F'); }
-      if (parsed.right) { cell.addWall('R'); }
-      else { cell.addConnect('R'); }
-      var msg = {id:'maze', maze:maze.getData(), cell:cell.getData()};
-      data = JSON.stringify(msg);
+      // log.info(JSON.stringify(parsed));
+      // if (parsed.left) { cell.addWall('L'); }
+      // else { cell.addConnect('L'); }
+      // if (parsed.center) { cell.addWall('F'); }
+      // else { cell.addConnect('F'); }
+      // if (parsed.right) { cell.addWall('R'); }
+      // else { cell.addConnect('R'); }
+      // var msg = {id:'maze', maze:maze.getData(), cell:cell.getData()};
+      // data = JSON.stringify(msg);
     }
     try {
       ws.send(data);

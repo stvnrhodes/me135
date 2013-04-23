@@ -41,6 +41,8 @@
       </canvas>
     </div>
     <div id="controls-div">
+      <input type="button" id="start-maze" value="Navigate through the maze!">
+      <br>
       <span id="mazeCoord">Click a cell!</span><br>
       To control direction, use WASD. To control speed, use XZ.
       <table border="0">
@@ -51,10 +53,11 @@
         <!-- <tr>
           <td>Left Encoder Count:</td>
           <td id="lEnc">0</td>
-        </tr> -->
+        </tr>
         <tr>
           <td>Right Encoder Count:</td>
           <td id="rEnc">0</td>
+        </tr> -->
       </table>
       <h1>Encoder Speeds</h1>
       <div id="enc-graph" style="width:600px;height:300px;"></div>
@@ -62,10 +65,10 @@
       <div id="ir-graph" style="width:600px;height:300px;"></div>
     </div>
     <div>
-      <input type="button" id="LED1" value="LED1">
-      <input type="button" id="LED2" value="LED2">
-      <input type="button" id="LED3" value="LED3">
-      <input type="button" id="LED4" value="LED4">
+      <input type="button" class="led-button" id="LED1" value="LED1">
+      <input type="button" class="led-button" id="LED2" value="LED2">
+      <input type="button" class="led-button" id="LED3" value="LED3">
+      <input type="button" class="led-button" id="LED4" value="LED4">
     </div>
   </section>
   <img></img>

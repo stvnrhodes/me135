@@ -61,15 +61,13 @@ function onLoad() {
     $('#Cam').click(function () {
       $('img').attr('src', "cam.jpg");
     } );
-    $('#LED1').click(function () { wsSend({ id:'led', num: 1 } ); });
-    $('#LED2').click( function() { wsSend({ id:'led', num: 2 } ); });
-    $('#LED3').click( function() { wsSend({ id:'led', num: 3 } ); });
-    $('#LED4').click( function() { wsSend({ id:'led', num: 4 } ); });
-    $('#resetEncoder').click ( function () {
-      wsSend({ id:'enc', action: 'rst' });
-    });
-    $('#robopath').click ( mazeClick );
-    $('#livefeed').click ( feedClick );
+    $('#LED1').click( function() { wsSend({ id:'led', num: 1 }); });
+    $('#LED2').click( function() { wsSend({ id:'led', num: 2 }); });
+    $('#LED3').click( function() { wsSend({ id:'led', num: 3 }); });
+    $('#LED4').click( function() { wsSend({ id:'led', num: 4 }); });
+    $('#start-maze').click( function() {wsSend({ id:'nav_unexplored'}); });
+    $('#robopath').click( mazeClick );
+    $('#livefeed').click( feedClick );
   }
 }
 
@@ -138,7 +136,7 @@ function drawCircle(x, y, r, canvas) {
 // This function will be somewhat confusing because the maze uses
 // x as row number and y as column number instead of x as width
 // and y as height
-var mazeClickInfo;
+var mazeClickInfo = {};
 function drawMaze(maze, cell, canvas){
   if (canvas.getContext) {
     var ctx = canvas.getContext('2d');
@@ -168,12 +166,17 @@ function drawMaze(maze, cell, canvas){
     if (wall_width === 0) {
       wall_width = 1;
     }
-    console.log(corners)
     var yOffset = (mazeSize === width ? BORDER / 2
                   : Math.floor(((height - width) * cellSize + BORDER)/2));
     var xOffset = (mazeSize === height ? BORDER / 2
                   : Math.floor(((width - height) * cellSize + BORDER)/2));
-    mazeClickInfo = {cellSize:cellSize, xOffset:xOffset, yOffset:yOffset, x0:x0, y0:y0};
+    // Cheat by using a global, hackish
+    mazeClickInfo.cellSize = cellSize;
+    mazeClickInfo.xOffset = xOffset;
+    mazeClickInfo.yOffset = yOffset;
+    mazeClickInfo.x0 = x0;
+    mazeClickInfo.y0 = y0;
+    mazeClickInfo.cell = cell;
 
     // Draw grey for unexplored cells, white for explored
     var drawCell = function(x, y) {
@@ -253,6 +256,7 @@ function drawMaze(maze, cell, canvas){
       ctx.fillStyle = "rgb(255,0,0)";
       var data = cell.getData();
       drawTriangle(data[0],data[1],data[2]);
+      console.log(cell.getPathToUnknown())
     }
   }
 }
@@ -264,6 +268,8 @@ function mazeClick(evt) {
     var y = Math.floor((coords.x - mazeClickInfo.yOffset) / mazeClickInfo.cellSize);
     $('#mazeCoord').html("Cell clicked: " + (x+mazeClickInfo.x0) + "," +
         (y+mazeClickInfo.y0));
+    console.log(mazeClickInfo.cell.getPath(x+mazeClickInfo.x0,y+mazeClickInfo.y0));
+    console.log(mazeClickInfo.cell.getPathToUnknown())
   }
 }
 

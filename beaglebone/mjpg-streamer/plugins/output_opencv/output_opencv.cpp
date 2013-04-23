@@ -169,7 +169,7 @@ void *worker_thread(void *arg)
         DBG("OpenCV time: %f\n",((float)end-mid)/CLOCKS_PER_SEC);
 
         // Wait 100ms so there's less overwhelming of data
-        usleep(100000);
+        //usleep(100000);
     }
 
     /* cleanup now */
