@@ -19,33 +19,34 @@ function onLoad() {
   }
   ws.onmessage = wsHandler();
   var speed = 5;
-  $('#livefeed').css('background-image','url(\'http://'+host+':8081/?action=stream\')');
-  // $('#livefeed').attr('src','http://'+host+':8081/?action=stream');
+  $('#livefeed').css('background-image','url(\'http://' + host +
+      ':8081/?action=stream\')');
   $('#speed').html(speed);
   ws.onopen = function() {
     $(document).keydown ( function ( event ) {
-      if(event.keyCode === 87) {  // 'W'
+      var keypress = String.fromCharCode(event.keyCode)
+      if (keypress === 'W') {  // 'W'
         wsSend({ id:'move', dir:'f', spd:speed });
-      }
-      else if(event.keyCode === 65) {  // 'A'
+      } else if (keypress === 'A') {
         wsSend({ id:'move', dir:'l', spd:speed });
-      }
-      else if(event.keyCode === 83) {  // 'S'
+      } else if (keypress === 'S') {
         wsSend({ id:'move', dir:'b', spd:speed });
-      }
-      else if(event.keyCode === 68) {  // 'D'
+      } else if (keypress === 'D') {
         wsSend({ id:'move', dir:'r', spd:speed });
-      }
-      else if(event.keyCode === 32) {  // Space bar
+      } else if (keypress === ' ') {
         wsSend({ id:'move', dir:'s', spd:speed });
-      }
-      else if(event.keyCode === 88) { // 'X'
+      } else if (keypress === 'O') {
+        wsSend({ id:'claw', pos:1 }); // Open claw
+      } else if (keypress === 'P') {
+        wsSend({ id:'claw', pos:0 });
+      } else if (keypress === 'I') {
+        wsSend({ id:'shoot' });
+      } else if (keypress === 'X') {
         if (speed < 10) {
           speed += 1;
         }
         $('#speed').html(speed);
-      }
-      else if(event.keyCode === 90) { // 'Z'
+      } else if (keypress === 'Z') {
         if (speed > 0) {
           speed -= 1;
         }
@@ -53,14 +54,11 @@ function onLoad() {
       }
     });
     $(document).keyup( function(event) {
-      var k = event.keyCode;
-      if ( k === 87 || k === 65 || k === 83 || k === 68 ) {  // 'WASD'
+      var k = String.fromCharCode(event.keyCode);
+      if ( k.match(/[WASD]/) ) {
         wsSend({ id:'move', dir:'s', spd:0 });
       }
     });
-    $('#Cam').click(function () {
-      $('img').attr('src', "cam.jpg");
-    } );
 
     $('#LED1').click( function() { wsSend({ id:'led', num: 1 }); });
     $('#LED2').click( function() { wsSend({ id:'led', num: 2 }); });
@@ -98,6 +96,18 @@ function wsHandler() {
       ir_graph.push(data.left,1);
       ir_graph.push(data.right,2);
       ir_graph.draw();
+    } else if (data.id === 'claw') {
+      $('#claw-pos-number').html(data.claw.toFixed(2) + '%');
+    } else if (data.id === 'shoot') {
+      $('#shots-fired-number').html(data.num.toString());
+    } else if (data.id === 'state') {
+      if (data.state === 'Explore') {
+        $('#explore-tab').attr('checked', true);
+      } else if (data.state === 'Manual') {
+        $('#manual-tab').attr('checked', true);
+      } else if (data.state === 'Navigate') {
+        $('#navigate-tab').attr('checked', true);
+      }
     }
   }
 }
