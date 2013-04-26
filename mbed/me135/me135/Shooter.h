@@ -43,7 +43,8 @@ class Shooter {
   void spindown(void);
 
   /**
-   * Reloads shooter, nonblocking but uses timers
+   * Spins up motor (if not spinning) and fires shooter,
+   * nonblocking but uses timers
    */
   void fire(void);
 
@@ -54,10 +55,16 @@ class Shooter {
    */
   bool isFiring(void);
 
+  /**
+   * Attaches a function to be called whenever the shooter fires
+   */
+  void attach(void (*func)(void));
+
  private:
   void on_(void);
   void off_(void);
   void recock_(void);
+  void engage_(void);
   void done_(void);
   DigitalOut servo_;
   PwmOut fwd_;
@@ -67,6 +74,8 @@ class Shooter {
   Timeout firing_timeout_;
   volatile int servo_pos_;
   volatile bool firing_;
+  volatile bool just_fired_;
+  void (*func_)(void);
 };
 
 }

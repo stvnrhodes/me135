@@ -77,7 +77,6 @@ void print_walls(Directions orientation, int xc, int yc) {
 
 int main() {
   Timer simulation_timer;
-  Timer
   simulation_timer.start();
   Timeout motor_safety;
   encTimer.start();
@@ -173,17 +172,6 @@ int main() {
           }
           break;
         }
-        // s - stop
-        case 's': {
-          switch (msg[1]) {
-            case 'i':
-              // TODO: Stop immediately
-              break;
-            case 'c':
-              // TODO: Stop at next cell
-              break;
-          }
-        }
         // mfXX - go direction at speed, with safety after .5s
         case 'm': {
           char dir = msg[1];
@@ -198,9 +186,8 @@ int main() {
         }
         // Shooter
         case 's': {
-
-        }
-		  break;
+          shooter.fire();
+		      break;
         }
         case 'l': { // LEDs
           switch(msg[1]) {

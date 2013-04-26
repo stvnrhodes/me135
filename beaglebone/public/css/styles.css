@@ -82,28 +82,36 @@ body {
   color: #018180;
 }
 
+#sidebar span#claw-pos-label{
+  color: #DB8F8D;
+}
+
 #ir-front-number{
-    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #d12b75, 0 1px 0px #333; /*//*/
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #d12b75, 0 1px 0px #333;
 }
 
 #ir-left-number{
-    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #f3b01a, 0 1px 0px #333; /*//*/
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #f3b01a, 0 1px 0px #333;
 }
 
 #ir-right-number{
-    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #2098d0, 0 1px 0px #333; /*//*/
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #2098d0, 0 1px 0px #333;
 }
 
 #enc-left-number{
-    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #ba6fe7, 0 1px 0px #333; /*//*/
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #ba6fe7, 0 1px 0px #333;
 }
 
 #enc-right-number{
-    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #51b247, 0 1px 0px #333; /*//*/
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #51b247, 0 1px 0px #333;
 }
 
 #shots-fired-number{
-    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #018180, 0 1px 0px #333; /*//*/
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #018180, 0 1px 0px #333;
+}
+
+#claw-pos-number{
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #DB8F8D, 0 1px 0px #333;
 }
 
 #title{

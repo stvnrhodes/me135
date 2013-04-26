@@ -6,12 +6,17 @@ static const int kRecockingTime = 200000; // in us
 static const int kServoTime = 20000; // in us
 static const int kServoFiring = 1425; // in us
 static const int kServoIdle = 1635; // in us
+static const int kSpinupTime = 1000000; // in us
+static const int kSpindownTime = 1000000; // in us
 
 Shooter::Shooter(PinName servo, PinName motor_fwd, PinName motor_rev):
     servo_(servo), fwd_(motor_fwd), rev_(motor_rev) {
   fwd_ = 0;
   rev_ = 0;
   servo_pos_ = kServoIdle;
+  func_ = NULL;
+  firing_ = false;
+  just_fired_ = true;
   servo_ticker_.attach_us(this, &Shooter::on_, kServoTime);
 }
 
@@ -28,20 +33,34 @@ void Shooter::spinup(void) {
   fwd_ = 1;
 }
 
-void Shooter::spindown(void){
+void Shooter::spindown(void) {
   fwd_ = 0;
+  just_fired_ = false;
 }
 
 void Shooter::fire(void) {
   if (!firing_) {
     firing_ = true;
-    servo_pos_ = kServoFiring;
-    firing_timeout_.attach_us(this, &Shooter::recock_, kFiringTime);
+    if (just_fired_) {
+      engage_();
+    } else {
+      spinup();
+      firing_timeout_.attach_us(this, &Shooter::engage_, kSpinupTime);
+    }
   }
+}
+
+void Shooter::engage_(void) {
+  servo_pos_ = kServoFiring;
+  firing_timeout_.attach_us(this, &Shooter::recock_, kFiringTime);
 }
 
 bool Shooter::isFiring(void) {
   return firing_;
+}
+
+void Shooter::attach(void (*func)(void)) {
+  func_ = func;
 }
 
 void Shooter::on_(void) {
@@ -60,5 +79,10 @@ void Shooter::recock_(void) {
 
 void Shooter::done_(void) {
   firing_ = false;
+  just_fired_ = true;
+  firing_timeout_.attach_us(this, &Shooter::spindown, kSpindownTime);
+  if (func_ != NULL) {
+    func_();
+  }
 }
 }
