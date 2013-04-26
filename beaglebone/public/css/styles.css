@@ -78,6 +78,10 @@ body {
   color: #51b247;
 }
 
+#sidebar span#shots-fired-label{
+  color: #018180;
+}
+
 #ir-front-number{
     box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #d12b75, 0 1px 0px #333; /*//*/
 }
@@ -96,6 +100,10 @@ body {
 
 #enc-right-number{
     box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #51b247, 0 1px 0px #333; /*//*/
+}
+
+#shots-fired-number{
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #018180, 0 1px 0px #333; /*//*/
 }
 
 #title{
@@ -125,4 +133,44 @@ margin-top:-60px;
 }
 #controls-div{
   clear:both;
+}
+
+/* Tabs */
+.tabs {
+  position: relative;
+  min-height: 200px; /* This part sucks */
+  clear: both;
+  margin: 25px 0;
+}
+.tab {
+  float: left;
+}
+.tab label {
+  background: #eee;
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-left: -1px;
+  position: relative;
+  left: 1px;
+}
+.tab [type=radio] {
+  display: none;
+}
+.tab-content {
+  position: absolute;
+  top: 28px;
+  left: 0;
+  background: white;
+  right: 0;
+  bottom: 0;
+  padding: 20px;
+  border: 1px solid #ccc;
+}
+[type=radio]:checked ~ label {
+  background: white;
+  border-bottom: 1px solid white;
+  z-index: 2;
+}
+[type=radio]:checked ~ label ~ .tab-content {
+  z-index: 1;
 }

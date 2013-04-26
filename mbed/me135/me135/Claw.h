@@ -47,8 +47,8 @@ class Claw {
   static const float kMinClawPos = 0;
   static const float kMaxClawPos = 1;
   static const int kServoTime = 20000;
-  static const int kServoMin = 1150;
-  static const int kServoMax = 2000;
+  static const int kServoMin = 1650;
+  static const int kServoMax = 2350;
   DigitalOut pin_;
   float pos_;
   volatile unsigned int cycle_time_;

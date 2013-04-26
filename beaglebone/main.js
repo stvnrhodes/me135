@@ -137,8 +137,6 @@ function tripleHandler(ws, socket, uart) {
           cell.turn(msg.dir);
         }
         uart.write('g' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
-      } else if (msg.id === 'enc') {
-        uart.write('e'+"\n");
       } else if (msg.id == 'pic_xy') {
         try {
           socket.write(data);

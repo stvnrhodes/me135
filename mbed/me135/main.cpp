@@ -12,12 +12,12 @@ DigitalOut led3(LED3);
 DigitalOut led4(LED4);
 me135::BeagleBone bone(p9, p10);
 QEI right_encoder(p11, p12, NC, kPuslesPerRotation);
-QEI left_encoder(p13, p14, NC, kPuslesPerRotation);
+QEI left_encoder(p13, p14, NC, kPuslesPerRotation);\
 me135::IRSensor front(p15);
 me135::IRSensor left(p16);
 me135::IRSensor right(p17);
 me135::DriveTrain right_drive(p21, p22);
-me135::DriveTrain left_drive(p23, p24);
+me135::DriveTrain left_drive(p24, p23);
 me135::Shooter shooter(p28, p25, p26);
 me135::Claw claw(p29);
 Timer encTimer;
@@ -77,6 +77,7 @@ void print_walls(Directions orientation, int xc, int yc) {
 
 int main() {
   Timer simulation_timer;
+  Timer
   simulation_timer.start();
   Timeout motor_safety;
   encTimer.start();
@@ -186,7 +187,7 @@ int main() {
         // mfXX - go direction at speed, with safety after .5s
         case 'm': {
           char dir = msg[1];
-          int spd = msg[2] * 10 + msg[3];
+          int spd = (msg[2] - '0') * 10 + (msg[3] - '0');
           runMotors(spd * 1.0, dir);
           if (dir != 's') {
             motor_safety.attach(coast, 0.5);
@@ -194,6 +195,12 @@ int main() {
             motor_safety.detach();
           }
           break;
+        }
+        // Shooter
+        case 's': {
+
+        }
+		  break;
         }
         case 'l': { // LEDs
           switch(msg[1]) {
@@ -216,11 +223,6 @@ int main() {
           }
           break;
         }
-        case 'e': { // Encoders
-          left_encoder.reset();
-          right_encoder.reset();
-          break;
-        }
       }
     }
     if (ir_timer.read_ms() > 100) {
@@ -241,6 +243,8 @@ int main() {
                             "," KEY("left_encoder", %d)
                             "," KEY("right_encoder", %d) "}\n",
                     left_encoder.getPulses(), right_encoder.getPulses());
+      left_encoder.reset();
+      right_encoder.reset();
       bone.write(buffer, len);
       encTimer.reset();
     }

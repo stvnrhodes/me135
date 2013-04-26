@@ -18,56 +18,114 @@
   <noscript>Javascript is disabled, nothing will work</noscript>
   <div id="sidebar">
     <hgroup>
-      <h2><b id="ir-front-number">0 in</b> <span id="ir-front-label">Front IR</span></h2>
-      <h2><b id="ir-left-number">0 in</b> <span id="ir-left-label">Left IR</span></h2>
-      <h2><b id="ir-right-number">0 in</b> <span id="ir-right-label">Right IR</span></h2>
-      <h2><b id="enc-left-number">0 f/s</b> <span id="enc-left-label">Left Speed</span></h2>
-      <h2><b id="enc-right-number">0 f/s</b> <span id="enc-right-label">Right Speed</span></h2>
+      <h2>
+        <b id="ir-front-number">0 in</b>
+        <span id="ir-front-label">Front IR</span>
+      </h2>
+      <h2>
+        <b id="ir-left-number">0 in</b>
+        <span id="ir-left-label">Left IR</span>
+      </h2>
+      <h2>
+        <b id="ir-right-number">0 in</b>
+        <span id="ir-right-label">Right IR</span>
+      </h2>
+      <h2>
+        <b id="enc-left-number">0 f/s</b>
+        <span id="enc-left-label">Left Speed</span>
+      </h2>
+      <h2>
+        <b id="enc-right-number">0 f/s</b>
+        <span id="enc-right-label">Right Speed</span>
+      </h2>
+      <h2>
+        <b id="shots-fired-number">0</b>
+        <span id="shots-fired-label">Shots fired</span>
+      </h2>
     </hgroup>
   </div>
   <section id="main-content-container">
     <div id="title">
       <h2>ME135 Search, Rescue, and Destroy</h2>
-      <h4>Kyle Tse, Anna Lee, Spencer Wong, Austin Chang, Steven Rhodes, Kevin Yu</h4>
+      <h4>Kyle Tse, Anna Lee, Spencer Wong, Austin Chang, Steven Rhodes,
+          Kevin Yu</h4>
     </div>
+
     <div class="wrapper" id="livefeed-div">
       <canvas id="livefeed" width="320" height="240">
         No canvas, so no livefeed!
       </canvas>
+      <div>
+        <input type="radio" name="color-chooser" value="ally-color" checked>
+          Ally Color <span id="ally-colored">&#9608</span>
+          <br>
+        </input>
+        <input type="radio" name="color-chooser" value="enemy-color">
+          Enemy Color <span id="enemy-colored">&#9608</span>
+        </input>
+      </div>
     </div>
+
     <div class="wrapper" id="robopath-div">
       <canvas id="robopath" width="300" height="300">
         No canvas, so no robopath!
       </canvas>
     </div>
+
     <div id="controls-div">
-      <span id="mazeCoord">Click a cell!</span><br>
-      To control direction, use WASD. To control speed, use XZ.
-      <table border="0">
-        <tr>
-          <td>Speed(0-10):</td>
-          <td id="speed">0</td>
-        </tr>
-        <!-- <tr>
-          <td>Left Encoder Count:</td>
-          <td id="lEnc">0</td>
-        </tr> -->
-        <tr>
-          <td>Right Encoder Count:</td>
-          <td id="rEnc">0</td>
-      </table>
+      <div class="tabs">
+
+        <div class="tab">
+          <input type="radio" id="mode-tab-1" name="mode-tab-group" checked>
+          <label for="mode-tab-1">Manual Control</label>
+          <div class="tab-content">
+            To control direction, use WASD. To control speed, use XZ.
+            <table border="0">
+              <tr>
+                <td>Speed(0-10):</td>
+                <td id="speed">0</td>
+              </tr>
+            </table>
+            Clicking one of the other tabs will change the mode of the robot, causing it to do something different. <b>Explore</b> makes the robot navigate to unknown areas of the maze in order to fully map it out. <b>Maze Control</b> lets you click the map to tell the robot to go to a location, and makes the WASD keys navigate in a grid instead of freeform.
+            <br>
+            Make sure to calibrate the ally and enemy colors. If you change the maze, you may also need to press the "Reset Maze" button at the bottom.
+          </div>
+        </div>
+
+        <div class="tab">
+          <input type="radio" id="mode-tab-2" name="mode-tab-group">
+          <label for="mode-tab-2">Explore</label>
+
+          <div class="tab-content">
+             Exploring...
+          </div>
+        </div>
+
+         <div class="tab">
+          <input type="radio" id="mode-tab-3" name="mode-tab-group">
+          <label for="mode-tab-3">Maze Control</label>
+
+          <div class="tab-content">
+            <span id="mazeCoord">
+              Click a cell, and we'll navigate there
+            </span><br>
+          </div>
+        </div>
+
+      </div>
       <h1>Encoder Speeds</h1>
       <div id="enc-graph" style="width:600px;height:300px;"></div>
       <h1>Distance Sensors</h1>
       <div id="ir-graph" style="width:600px;height:300px;"></div>
     </div>
+
     <div>
       <input type="button" id="LED1" value="LED1">
       <input type="button" id="LED2" value="LED2">
       <input type="button" id="LED3" value="LED3">
       <input type="button" id="LED4" value="LED4">
+      <input type="button" id="reset-maze" value="Reset Maze">
     </div>
   </section>
-  <img></img>
 </body>
 </html>

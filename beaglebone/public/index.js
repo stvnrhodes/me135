@@ -65,9 +65,6 @@ function onLoad() {
     $('#LED2').click( function() { wsSend({ id:'led', num: 2 } ); });
     $('#LED3').click( function() { wsSend({ id:'led', num: 3 } ); });
     $('#LED4').click( function() { wsSend({ id:'led', num: 4 } ); });
-    $('#resetEncoder').click ( function () {
-      wsSend({ id:'enc', action: 'rst' });
-    });
     $('#robopath').click ( mazeClick );
     $('#livefeed').click ( feedClick );
   }
@@ -78,16 +75,7 @@ function wsHandler() {
   var enc_graph = new Plot('#enc-graph', ["Left", "Right"]);
   return function(event) {
     var data = JSON.parse(event.data);
-    if (data.id === 'b') {
-      buttonText = $('#buttonText');
-      if (data.val) {
-        buttonText.html("not pressed");
-      } else {
-        buttonText.html("pressed");
-      }
-    } else if (data.id === 'ctr') {
-      $('#counterText').html(data.val.toString());
-    } else if (data.id === 'encoder') {
+    if (data.id === 'encoder') {
       $('#enc-left-number').html(data.left_encoder.toFixed(2) + " f/s");
       $('#enc-right-number').html(data.right_encoder.toFixed(2) + " f/s");
       enc_graph.push(data.left_encoder, 0);
@@ -113,6 +101,8 @@ function wsHandler() {
   }
 }
 
+
+
 function drawCircle(x, y, r, canvas) {
   if (canvas.getContext) {
 
@@ -135,10 +125,12 @@ function drawCircle(x, y, r, canvas) {
   }
 }
 
+// Eww, a global! Be wary.
+var mazeClickInfo;
+
 // This function will be somewhat confusing because the maze uses
 // x as row number and y as column number instead of x as width
 // and y as height
-var mazeClickInfo;
 function drawMaze(maze, cell, canvas){
   if (canvas.getContext) {
     var ctx = canvas.getContext('2d');

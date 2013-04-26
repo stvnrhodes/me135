@@ -10,7 +10,7 @@ inline T map(T n, T a, T b, T x, T y){
 }
 
 Claw::Claw(PinName servo) : pin_(servo) {
-  pos_ = (kMaxClawPos + kMinClawPos) / 2;
+  write(0.5);
   ticker_.attach_us(this, &Claw::on_, kServoTime);
 }
 
