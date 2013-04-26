@@ -168,9 +168,34 @@ Maze.prototype.getPath = function(x0, y0, x1, y1) {
 };
 
 Maze.prototype.getPathToUnknown = function(x,y) {
-  // Probably do fill algorithm to find nearest unknown
-  // Either getPath to an unknown, or do travelling salesman
-
+  // Copy-pasta'd from getPath, means there's a code smell
+  var start = this._node(x,y);
+  // Do maze finding algorithm here
+  // We'll do breadth-first search
+  var node = start;
+  var fringe = []
+  var path = {}
+  var node_edges = [];
+  while (node.isExplored()) {
+    node_edges = node.getEdges();
+    for (var i = 0; i < node_edges.length; i++) {
+      var next_node = node_edges[i];
+      if (!path[next_node.loc]) {
+        path[next_node.loc] = node;
+        fringe.push(next_node);
+      }
+    }
+    node = fringe.shift();
+    if (!node) { // node is undefined if we empty the fringe
+      return null;
+    }
+  }
+  var answer = [];
+  while (node !== start){
+    answer.unshift(node.loc);
+    node = path[node.loc];
+  }
+  return answer;
 };
 
 Maze.prototype.isExplored = function(x, y) {
@@ -307,6 +332,9 @@ Cell.dirTable = {N:0,W:1,S:2,E:3,
                  n:0,w:1,s:2,e:3,
                  F:0,L:1,B:2,R:3,
                  f:0,l:1,b:2,r:3};
+// Here, we can convert from numbers to letters
+Cell.invDirTable = ['f','l','b','r']
+
 
 // Direction is F, R, L, or B
 Cell.prototype.addWall = function(dir) {
@@ -341,15 +369,35 @@ Cell.prototype.addConnect = function(dir) {
   this.maze.addEdge(this.x, this.y, x, y);
 };
 
+
 Cell.prototype.getPath = function(x,y) {
   // TODO: Benchmark, see if it's too slow when ran a lot
-  var path = maze.getPath(this.x, this.y, x, y);
-  return path;
+  var path = this.maze.getPath(this.x, this.y, x, y);
+  // Turns relative coordinates into direction
+  // Takes advantage of the ordering of the direction
+  var dir;
+  if (this.x !== path[0][0]) {
+    dir = path[0][0] - this.x + 1
+  } else {
+    dir = path[0][1] - this.y + 2
+  }
+  return Cell.invDirTable[(dir - this.dir + 4) % 4];
 }
 
 Cell.prototype.getPathToUnknown = function() {
-  var path = maze.getPathToUnknown(this.x, this.y);
-  return path;
+  var path = this.maze.getPathToUnknown(this.x, this.y);
+  // Check if we've explored everything
+  if (path === null) {
+    return null;
+  }
+  // Copied from getPath
+  var dir;
+  if (this.x !== path[0][0]) {
+    dir = path[0][0] - this.x + 1
+  } else {
+    dir = path[0][1] - this.y + 2
+  }
+  return Cell.invDirTable[(dir - this.dir + 4) % 4];
 }
 
 // Turn F,R,L,B
