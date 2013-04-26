@@ -108,6 +108,9 @@ function wsHandler() {
       } else if (data.state === 'Navigate') {
         $('#navigate-tab').attr('checked', true);
       }
+    } else if (data.id === 'color') {
+      $('#ally-colored').css('color', data.ally);
+      $('#enemy-colored').css('color', data.enemy)
     }
   }
 }
@@ -280,7 +283,9 @@ function mazeClick(evt) {
 
 function feedClick(evt) {
   var coords = $('#livefeed')[0].relMouseCoords(evt);
-  coords.id = "pic_xy";
+  coords.id = 'pic_xy';
+  // O for ally, 1 for enemy
+  coords.type = $('#cam-colors [type=radio]:checked')[0].value;
   wsSend(coords);
 }
 

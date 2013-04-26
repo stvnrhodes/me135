@@ -59,12 +59,14 @@
       <canvas id="livefeed" width="320" height="240">
         No canvas, so no livefeed!
       </canvas>
-      <div>
-        <input type="radio" name="color-chooser" value="ally-color" checked>
+      <div id="cam-colors">
+        <input type="radio" name="color-chooser" value="0"
+            id="ally-color-radio" checked>
           Ally Color <span id="ally-colored">&#9608</span>
           <br>
         </input>
-        <input type="radio" name="color-chooser" value="enemy-color">
+        <input type="radio" name="color-chooser" value="1"
+            id="enemy-color-radio">
           Enemy Color <span id="enemy-colored">&#9608</span>
         </input>
       </div>
