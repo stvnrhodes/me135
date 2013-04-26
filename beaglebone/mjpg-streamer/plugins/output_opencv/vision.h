@@ -14,7 +14,6 @@
 #include <sys/ioctl.h>
 #include <json/json.h>
 
-#define BLUR_FACTOR 3
 
 class Vision {
  public:
@@ -22,9 +21,10 @@ class Vision {
   ~Vision(void);
   int loop(cv::Mat src);
  private:
+  static const int kNumColors = 2;
   cv::Vec3b _getPixel(const cv::Mat img, const int x, const int y);
   void _thresholdImage(const cv::Mat img, const cv::Vec3b pixel, cv::Mat &output);
   int _sockfd;
-  cv::Vec3b _color;
+  cv::Vec3b _color[kNumColors];
 };
 #endif // VISION_H

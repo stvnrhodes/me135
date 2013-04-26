@@ -1,4 +1,5 @@
 #include "vision.h"
+#define KEY(x,y) #x ":" #y
 
 Vision::Vision(void) {
   struct sockaddr_un server;
@@ -16,8 +17,8 @@ Vision::Vision(void) {
     close(_sockfd);
     perror("connecting stream socket");
   }
-  _color = cv::Vec3b(0,0,0);
-
+  _color[0] = cv::Vec3b(0,0,0);
+  _color[1] = cv::Vec3b(0,0,0);
 }
 
 Vision::~Vision(void) {
@@ -41,10 +42,12 @@ void Vision::_thresholdImage(const cv::Mat img, const cv::Vec3b pixel,
 }
 
 int Vision::loop(cv::Mat src) {
-  char buffer[80];
+
+  // Check if there's a message waiting
   int len = 0;
   ioctl(_sockfd, FIONREAD, &len);
   if (len > 0) {
+    char buffer[80];
     len = read(_sockfd, buffer, len);
     Json::Value msg;   // will contains the root value after parsing.
     Json::Reader reader;
@@ -55,34 +58,46 @@ int Vision::loop(cv::Mat src) {
       << reader.getFormattedErrorMessages();
       return -1;
     }
+
+    // Update the color we're seeking
     int channel = msg.get("channel", -1).asInt();
     int x = msg.get("x", -1 ).asInt();
     int y = msg.get("y", -1 ).asInt();
-    if (x != -1 && y != -1) {
-      _color = _getPixel(src, x, y);
+    if (channel != -1 && x != -1 && y != -1) {
+      _color[channel] = _getPixel(src, x, y);
     }
-    output_stream << "{\"id\":\"updated\",\"x\":" << x <<
-                     ",\"y\":" << y <<
-                     ",\"channel\":" << channel <<
-                     "}" << std::endl;
-    std::string output = output_stream.str();
+    // TODO: Change to use streams
+    sprintf(buffer, "{" KEY("id","color")
+                    "," KEY("ally", "#%.2x%.2x%.2x")
+                    "," KEY("enemy","#%.2x%.2x%.2x")
+                    "}\n", _color[0][0], _color[0][2], _color[0][2],
+                           _color[1][0], _color[1][2], _color[1][2]);
     if (write(_sockfd, outputConfig.c_str(), outputConfig.length()) < 0) {
       perror("writing on stream socket");
     }
   }
 
-  _thresholdImage(src, _color, src);
-  cv::Moments moments = cv::moments(src);
-
   std::ostringstream output_stream;
-  output_stream << "{\"id\":\"moments\",\"m10\":" << moments.m10 <<
-                   ",\"m01\":" << moments.m01 <<
-                   ",\"m00\":" << moments.m00 <<
-                   "}" << std::endl;
+  output_stream << "{\"id\":\"moments\""
+  for (int i = 0; i < kNumColors; i++) {
+    if (_color[i][0] != 0 && _color[i][1] != 0 && color[i][2] != 0) {
+      _thresholdImage(src, _color, src);
+      cv::Moments moments = cv::moments(src);
+      if (moments.m00 > 0) {
+        output_stream << ",\"" << i << "m10\":" << moments.m10 <<
+                         ",\"" << i << "m01\":" << moments.m01 <<
+                         ",\"" << i << "m00\":" << moments.m00;
+      }
+    }
+  }
+  output_stream << "}" << std::endl;
+
   std::string output = output_stream.str();
   if (write(_sockfd, output.c_str(), output.length()) < 0) {
     perror("writing on stream socket");
   }
+
+  // Force the socket to send;
   fflush(NULL);
   return 1;
 }
