@@ -55,7 +55,7 @@ int QEI::getCurrentState(void) {
 }
 
 int QEI::getPulses(int ctr_num) {
-  return pulses_ - offset_ctr_num;
+  return pulses_ - offset_[ctr_num];
 }
 
 int QEI::getPeriod(void) {
@@ -105,7 +105,7 @@ void QEI::encode_(void) {
       change = -1;
     }
     pulses_ -= change;
-    int time = timer.read_us();
+    int time = timer_.read_us();
     period_ = (time - last_time_) / 2 + period_ / 2;
     last_time_ = time;
   }

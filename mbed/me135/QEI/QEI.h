@@ -46,7 +46,7 @@ public:
      * @param channelA mbed pin for channel A input.
      * @param channelB mbed pin for channel B input.
      */
-    QEI(PinName channelA, PinName channelB, PinName index, int pulsesPerRev, Encoding encoding = X2_ENCODING);
+    QEI(PinName channelA, PinName channelB);
 
     /**
      * Reset the encoder.

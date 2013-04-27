@@ -11,8 +11,8 @@ DigitalOut led2(LED2);
 DigitalOut led3(LED3);
 DigitalOut led4(LED4);
 me135::BeagleBone bone(p9, p10);
-QEI right_encoder(p11, p12, NC, kPuslesPerRotation);
-QEI left_encoder(p13, p14, NC, kPuslesPerRotation);\
+QEI right_encoder(p11, p12);
+QEI left_encoder(p13, p14);
 me135::IRSensor front(p15);
 me135::IRSensor left(p16);
 me135::IRSensor right(p17);
@@ -229,9 +229,9 @@ int main() {
       len = sprintf(buffer, "{" KEY("id", "encoder")
                             "," KEY("left_encoder", %d)
                             "," KEY("right_encoder", %d) "}\n",
-                    left_encoder.getPulses(), right_encoder.getPulses());
-      left_encoder.reset();
-      right_encoder.reset();
+                    left_encoder.getPulses(0), right_encoder.getPulses(0));
+      left_encoder.reset(0);
+      right_encoder.reset(0);
       bone.write(buffer, len);
       encTimer.reset();
     }
