@@ -17,6 +17,7 @@ typedef struct {
   float dist;
   Mutex *mutex;
   void (*fn)(void);
+  Direction dir;
 } TankInfo;
 
 void TankDrive_runTankDist(const void *args){
@@ -30,14 +31,38 @@ void TankDrive_runTankDist(const void *args){
 
   left->reset(0);
   right->reset(0);
-
-  for (int dist = 0; dist < final; dist = min(left->getPulses(0), right->getPulses(0))) {
-    int error = final - dist;
-    // Only proportional control for now
-    tank->forward(kPDistConstant * error);
-    Thread::wait(kDistLoopTime);
+  switch (tank_info->dir) {
+  case FWD:
+    for (int dist = 0; dist < final; dist = min(left->getPulses(0), right->getPulses(0))) {
+      int error = final - dist;
+      // Only proportional control for now
+      tank->forward(kPDistConstant * error);
+      Thread::wait(kDistLoopTime);
+    }
+    break;
+  case LEFT:
+    for (int dist = 0; dist < final; dist = min(-left->getPulses(0), right->getPulses(0))) {
+      int error = final - dist;
+      // Only proportional control for now
+      tank->left(kPDistConstant * error);
+      Thread::wait(kDistLoopTime);
+    }
+    break;
+  case RIGHT:
+    for (int dist = 0; dist < final; dist = min(left->getPulses(0), -right->getPulses(0))) {
+      int error = final - dist;
+      // Only proportional control for now
+      tank->right(kPDistConstant * error);
+      Thread::wait(kDistLoopTime);
+    }
+    break;
+  default:
+    // Invalid, do nothing
+    break;
   }
-  callback();
+  if (callback != NULL) {
+    callback();
+  }
   mutex->unlock();
 }
 
@@ -81,13 +106,14 @@ float TankDrive::getRightSpeed(void) {
   return kUsPerS / right_enc_->getPeriod();
 }
 
-void TankDrive::goDist (float dist, void (*fn)(void)) {
+void TankDrive::goDist (float dist, void (*fn)(void), Direction dir) {
   if (dist_mutex_.trylock()) {
     TankInfo *tankInfo = (TankInfo*) malloc(sizeof(TankInfo));
     tankInfo->tank = this;
     tankInfo->dist = dist;
     tankInfo->mutex = &dist_mutex_;
     tankInfo->fn = fn;
+    tankInfo->dir = dir;
     Thread(TankDrive_runTankDist, (void *) tankInfo, osPriorityHigh);
   }
 }

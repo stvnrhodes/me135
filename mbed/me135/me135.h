@@ -17,6 +17,9 @@
 // Very odd, it doesn't compile if you declare it here
 //#include "TankDrive.h"
 
+const int kSendDataTime = 200; // in ms, time between sending data for graphs
+const float kSquareSize = 12; // in inches
+
 const int FAKE_MAZE_ROWS = 4;
 const int FAKE_MAZE_COLUMNS = 4;
 const bool fake_maze[4][4][4] = {{{1,1,0,0},{1,0,1,0},{1,0,0,0},{1,0,0,1}},

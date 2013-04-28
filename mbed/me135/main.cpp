@@ -28,8 +28,34 @@ Timer encTimer;
 const int MAX_MSG_SIZE = 10;
 const float MAX_SPEED = 10.0;
 
-void distControl() {
+// We send the data back so we can have pretty graphs
+void sendSensorData(const void* args) {
+  char buffer[256];
+  char len;
+  for (;;) {
+    len = sprintf(buffer, "{" KEY("id","ir")
+                          "," KEY("front", %f)
+                          "," KEY("left",%f)
+                          "," KEY("right",%f) "}\n",
+                          front.read(), left.read(), right.read());
+    bone.write(buffer, len);
+    len = sprintf(buffer, "{" KEY("id", "encoder")
+                          "," KEY("left_encoder", %d)
+                          "," KEY("right_encoder", %d) "}\n",
+                  left_encoder.getPeriod(), right_encoder.getPeriod());
+    bone.write(buffer, len);
+    Thread::wait(kSendDataTime);
+  }
+}
 
+void dist_callback(void) {
+  char buffer[256];
+  char len = sprintf(buffer, "{" KEY("id","maze_walls")
+                             "," KEY("left",%d)
+                             "," KEY("right",%d)
+                             "," KEY("center",%d)
+                             "}", left < 5, right < 5, center < 5);
+  bone.write(buffer, len);
 }
 
 void runMotors(float spd, char func) {
@@ -83,6 +109,8 @@ void print_walls(Directions orientation, int xc, int yc) {
 }
 
 int main() {
+
+  Thread(sendSensorData, ptr, osPriorityLow);
   Timer simulation_timer;
   simulation_timer.start();
   Timeout motor_safety;
@@ -166,7 +194,7 @@ int main() {
           char dir = msg[1];
           switch(dir) {
             case 'f':
-              mode = MOVE_FORWARD;
+              tank.goDist(kSquareSize, dist_callback);
               break;
             case 'r':
               mode = TURN_RIGHT;
@@ -218,29 +246,6 @@ int main() {
           break;
         }
       }
-    }
-    if (ir_timer.read_ms() > 100) {
-      char buffer[256];
-      char len;
-      len = sprintf(buffer, "{" KEY("id","ir")
-                            "," KEY("front", %f)
-                            "," KEY("left",%f)
-                            "," KEY("right",%f) "}\n",
-                            front.read(), left.read(), right.read());
-      bone.write(buffer, len);
-      ir_timer.reset();
-    }
-    if (encTimer.read_ms() > 250) {
-      char buffer[256];
-      char len;
-      len = sprintf(buffer, "{" KEY("id", "encoder")
-                            "," KEY("left_encoder", %d)
-                            "," KEY("right_encoder", %d) "}\n",
-                    left_encoder.getPulses(0), right_encoder.getPulses(0));
-      left_encoder.reset(0);
-      right_encoder.reset(0);
-      bone.write(buffer, len);
-      encTimer.reset();
     }
   }
 }

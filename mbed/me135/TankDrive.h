@@ -38,18 +38,12 @@ class TankDrive {
   float getRightSpeed(void);
 
   /**
-   * Distance control
-   * @param dist Distance to go in inches
+   * Distance control, forward, left, and right are supported
+   * @param dist Distance to go in inches or degrees
    * @param fn A callback function
    */
-  void goDist(float dist, void (*fn)(void));
+  void goDist(float dist, void (*fn)(void), Direction dir);
 
-  /**
-   * Turning control
-   * @param deg Amount to turn in degrees
-   * @param fn A callback function
-   */
-  void turn(float deg, void(*fn)(void));
 
   // Sloppy encapsulation, but makes doing threading easier
   // We'll keep the underscore because even though it's public,
