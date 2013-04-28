@@ -1,13 +1,6 @@
 #include "Claw.h"
 namespace me135{
-template <typename T>
-inline T constrain(T x, T min, T max){
-  return x > max ? max : (x < min ? min : x);
-}
-template <typename T>
-inline T map(T n, T a, T b, T x, T y){
-  return x + (n-a)*(y-x)/(b-a);
-}
+
 
 Claw::Claw(PinName servo) : pin_(servo) {
   write(0.5);

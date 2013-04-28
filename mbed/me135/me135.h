@@ -14,6 +14,8 @@
 #include "Shooter.h"
 #include "IRSensor.h"
 #include "QEI.h"
+// Very odd, it doesn't compile if you declare it here
+//#include "TankDrive.h"
 
 const int FAKE_MAZE_ROWS = 4;
 const int FAKE_MAZE_COLUMNS = 4;
@@ -48,5 +50,25 @@ const Directions real_direction[4][4] = {{UP, LEFT, DOWN, RIGHT},
                                          {LEFT, DOWN, RIGHT, UP},
                                          {DOWN, RIGHT, UP, LEFT},
                                          {RIGHT, UP, LEFT, DOWN}};
+
+template <typename T>
+inline T constrain(T x, T min, T max){
+  return x > max ? max : (x < min ? min : x);
+}
+
+template <typename T>
+inline T map(T n, T a, T b, T x, T y){
+  return x + (n-a)*(y-x)/(b-a);
+}
+
+template <typename T>
+inline T max(T x, T y) {
+  return x > y ? x : y;
+}
+
+template <typename T>
+inline T min(T x, T y) {
+  return x < y ? x : y;
+}
 
 #endif /* ME135_H_ */

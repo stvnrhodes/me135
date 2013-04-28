@@ -1,6 +1,7 @@
 #ifndef _BEAGLEBONE_H_
 #define _BEAGLEBONE_H_
 #include "mbed.h"
+#include "rtos.h"
 
 namespace me135 {
 /**
@@ -39,6 +40,7 @@ class BeagleBone {
   void write(const char *str, const int len);
 
  private:
+  Mutex output_mutex_;
   static const int kBufferLen = 512;
   static const int kBaudRate = 115200;
   Serial uart_;

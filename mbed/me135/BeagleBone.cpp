@@ -16,6 +16,7 @@ bool BeagleBone::readable(void) {
 }
 
 void BeagleBone::read(char *str, const int len) {
+  output_mutex_.lock();
   NVIC_DisableIRQ(UART1_IRQn);
   char c = 0;
   for (int i = 0; c != '\n' && i < len; i++) {
@@ -29,6 +30,7 @@ void BeagleBone::read(char *str, const int len) {
     rx_out_ = (rx_out_ + 1) % kBufferLen;
   }
   NVIC_EnableIRQ(UART1_IRQn);
+  output_mutex_.unlock();
   return;
 }
 

@@ -1,8 +1,9 @@
 #ifndef _TANKDRIVE_H_
 #define _TANKDRIVE_H_
 #include "mbed.h"
-#include "DriveTrain.h"
+#include "me135.h"
 #include "QEI.h"
+#include "rtos.h"
 
 namespace me135 {
 /**
@@ -27,7 +28,6 @@ class TankDrive {
   void backward(float speed);
   void left(float speed);
   void right(float speed);
-  void stop(void);
 
   /**
    * Speed reading
@@ -42,8 +42,7 @@ class TankDrive {
    * @param dist Distance to go in inches
    * @param fn A callback function
    */
-  void forwardDist(float dist, void (*fn)(void));
-  void backwardDist(float dist, void (*fn)(void));
+  void goDist(float dist, void (*fn)(void));
 
   /**
    * Turning control
@@ -52,17 +51,16 @@ class TankDrive {
    */
   void turn(float deg, void(*fn)(void));
 
+  // Sloppy encapsulation, but makes doing threading easier
+  // We'll keep the underscore because even though it's public,
+  // it really should be private.
+  QEI *left_enc_, *right_enc_;
+
  private:
+  DriveTrain *left_, *right_;
+  Mutex dist_mutex_;
   void speed_loop_(void);
   void maintain_speed_(float target_speed, DriveTrain *drive, QEI *enc);
-  static const float kProportionalConstant = 1;
-  static const float kOpenLoopConstant = 1;
-  static const float kIntegralConstant = 1;
-  static const float kClicksPerInch = 10;
-  static const float kUsPerS = 1000000;
-  static const float kSpeedLoopTime = 25000; // in us
-  DriveTrain *left_, *right_;
-  QEI *left_enc_, *right_enc_;
   Ticker speed_control_;
   volatile float right_target_speed_;
   volatile float left_target_speed_;

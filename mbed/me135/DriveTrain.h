@@ -1,6 +1,7 @@
 #ifndef _DRIVETRAIN_H_
 #define _DRIVETRAIN_H_
 #include "mbed.h"
+#include "me135.h"
 
 namespace me135 {
 /**

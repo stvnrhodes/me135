@@ -1,10 +1,6 @@
 #include "DriveTrain.h"
 
 namespace me135 {
-template <typename T>
-inline T constrain(T x, T min, T max){
-  return x > max ? max : (x < min ? min : x);
-}
 
 DriveTrain::DriveTrain(PinName fwd, PinName rev) : fwd_(fwd), rev_(rev) {
   fwd_ = 0;

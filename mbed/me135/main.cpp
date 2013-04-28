@@ -1,7 +1,9 @@
 // Print "Hello World" to the PC
 
 #include "mbed.h"
+#include "rtos.h"
 #include "me135.h"
+#include "TankDrive.h"
 #define VERBOSE
 #define KEY(x,y) #x ":" #y
 static const int kPuslesPerRotation = 333;
@@ -20,10 +22,15 @@ me135::DriveTrain right_drive(p21, p22);
 me135::DriveTrain left_drive(p24, p23);
 me135::Shooter shooter(p28, p25, p26);
 me135::Claw claw(p29);
+me135::TankDrive tank(&left_drive, &right_drive, &left_encoder, &right_encoder);
 Timer encTimer;
 
 const int MAX_MSG_SIZE = 10;
 const float MAX_SPEED = 10.0;
+
+void distControl() {
+
+}
 
 void runMotors(float spd, char func) {
   spd = spd / MAX_SPEED;
