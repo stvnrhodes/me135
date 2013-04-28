@@ -42,7 +42,7 @@ class TankDrive {
    * @param dist Distance to go in inches or degrees
    * @param fn A callback function
    */
-  void goDist(float dist, void (*fn)(void), Direction dir);
+  void goDist(float dist, void (*fn)(void), Directions dir);
 
 
   // Sloppy encapsulation, but makes doing threading easier

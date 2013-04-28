@@ -17,7 +17,7 @@ typedef struct {
   float dist;
   Mutex *mutex;
   void (*fn)(void);
-  Direction dir;
+  Directions dir;
 } TankInfo;
 
 void TankDrive_runTankDist(const void *args){
@@ -106,7 +106,7 @@ float TankDrive::getRightSpeed(void) {
   return kUsPerS / right_enc_->getPeriod();
 }
 
-void TankDrive::goDist (float dist, void (*fn)(void), Direction dir) {
+void TankDrive::goDist (float dist, void (*fn)(void), Directions dir) {
   if (dist_mutex_.trylock()) {
     TankInfo *tankInfo = (TankInfo*) malloc(sizeof(TankInfo));
     tankInfo->tank = this;

@@ -54,7 +54,7 @@ void dist_callback(void) {
                              "," KEY("left",%d)
                              "," KEY("right",%d)
                              "," KEY("center",%d)
-                             "}", left < 5, right < 5, center < 5);
+                             "}", left < 5, right < 5, front < 5);
   bone.write(buffer, len);
 }
 
@@ -110,7 +110,7 @@ void print_walls(Directions orientation, int xc, int yc) {
 
 int main() {
 
-  Thread(sendSensorData, ptr, osPriorityLow);
+  Thread(sendSensorData, NULL, osPriorityLow);
   Timer simulation_timer;
   simulation_timer.start();
   Timeout motor_safety;
@@ -194,7 +194,7 @@ int main() {
           char dir = msg[1];
           switch(dir) {
             case 'f':
-              tank.goDist(kSquareSize, dist_callback);
+              tank.goDist(kSquareSize, dist_callback, FWD);
               break;
             case 'r':
               mode = TURN_RIGHT;
