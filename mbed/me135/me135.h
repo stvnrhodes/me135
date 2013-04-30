@@ -16,8 +16,9 @@
 #include "QEI.h"
 
 
+const int kDistControlLoopTime = 50000; // in us
 const int kSpeedControlLoopTime = 50000; // in us
-const int kSendDataTime = 200; // in ms, time between sending data for graphs
+const int kSendDataTime = 200000; // in us, time between sending graph data
 const int kQuarterCircle = 90;
 const int kHalfCircle = 180;
 const int kUsPerS = 1000000;
@@ -27,6 +28,7 @@ const int kSpeedOL = 1;
 const int kSpeedP = 1;
 const int kDistP = 1;
 const int kClicksPerInch = 10;
+const int kClicksPerDeg = 10;
 const float kMaxPrescaledSpeed = 1000;
 const float kSquareSize = 12; // in inches
 const int kMaxMsgSize = 10;

@@ -21,14 +21,12 @@ volatile int g_right_target_speed = 0;
 
 // We send the data back so we can have pretty graphs
 void send_ir(void) {
-  printf("sending ir\r\n");
   char buffer[256];
   int len = sprintf(buffer, "{" KEY("id","ir")
                             "," KEY("front", %f)
                             "," KEY("left",%f)
                             "," KEY("right",%f) "}\n",
                         front_ir.read(), left_ir.read(), right_ir.read());
-  printf("%s", buffer);
   bone.write(buffer, len);
 }
 
@@ -148,6 +146,9 @@ int main() {
   Timer send_data_timer;
   send_data_timer.start();
 
+  Timer dist_control_loop_timer;
+  dist_control_loop_timer.start()
+
   int target_dist = 0; // Used in distance mode;
   Directions target_dir = STOP; // Used in distance mode;
   Modes mode = IDLE;
@@ -155,13 +156,16 @@ int main() {
   char msg[kMaxMsgSize];
   for (;;) {
     switch (mode) {
-      case MOVING: {
-        bool done = dist_control(target_dist, target_dir);
-        if (done) {
-          send_walls();
-          mode = IDLE;
+      case MOVING:
+        if (dist_control_loop_timer.read_us() > kDistControlLoopTime) {
+          dist_control_loop_timer.reset();
+          bool done = dist_control(target_dist, target_dir);
+          if (done) {
+            send_walls();
+            mode = IDLE;
+          }
         }
-      }
+        break;
       case IDLE:
       default:
        // Do nothing, for now
@@ -180,19 +184,19 @@ int main() {
             char dir = msg[1];
             switch(dir) {
               case 'f':
-                target_dist = kSquareSize;
+                target_dist = kSquareSize * kClicksPerInch * kSpeedScaling;
                 target_dir = FWD;
                 break;
               case 'r':
-                target_dist = kQuarterCircle;
+                target_dist = kQuarterCircle * kClicksPerDeg * kSpeedScaling;
                 target_dir = RIGHT;
                 break;
               case 'l':
-                target_dist = kQuarterCircle;
+                target_dist = kQuarterCircle * kClicksPerDeg * kSpeedScaling;
                 target_dir = LEFT;
                 break;
               case 'b':
-                target_dist = kHalfCircle;
+                target_dist = kHalfCircle * kClicksPerDeg * kSpeedScaling;
                 target_dir = LEFT;
                 break;
               default:
@@ -215,6 +219,11 @@ int main() {
             motor_safety.detach();
           }
           break;
+        }
+        // Claw
+        case 'c': {
+          int pos = (msg[1] - '0') * 10 + (msg[2] - '0');
+          claw = pos / kMaxClawPos;
         }
         // Shooter
         case 's': {
