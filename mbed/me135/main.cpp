@@ -147,7 +147,7 @@ int main() {
   send_data_timer.start();
 
   Timer dist_control_loop_timer;
-  dist_control_loop_timer.start()
+  dist_control_loop_timer.start();
 
   int target_dist = 0; // Used in distance mode;
   Directions target_dir = STOP; // Used in distance mode;
