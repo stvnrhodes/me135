@@ -31,7 +31,6 @@ void send_ir(void) {
 }
 
 void send_encoder(void) {
-  printf("sending encoder\r\n");
   char buffer[256];
   int len = sprintf(buffer, "{" KEY("id", "encoder")
                             "," KEY("left_enc", %d)
