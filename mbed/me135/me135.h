@@ -15,12 +15,11 @@
 #include "IRSensor.h"
 #include "QEI.h"
 
-
+const int kWallDist = 5;
 const int kDistControlLoopTime = 50000; // in us
 const int kSpeedControlLoopTime = 50000; // in us
 const int kSendDataTime = 200000; // in us, time between sending graph data
 const int kQuarterCircle = 90;
-const int kHalfCircle = 180;
 const int kUsPerS = 1000000;
 const int kSpeedScaling = 1000;
 const int kSpeedI = 0;

@@ -18,7 +18,7 @@ function onLoad() {
     ws = new WebSocket('ws://' + host);
   }
   ws.onmessage = wsHandler();
-  var speed = 5;
+  var speed = 50;
   $('#livefeed').css('background-image','url(\'http://' + host +
       ':8081/?action=stream\')');
   $('#speed').html(speed);
@@ -36,13 +36,13 @@ function onLoad() {
       } else if (keypress === ' ') {
         wsSend({ id:'move', dir:'s', spd:speed });
       } else if (keypress === 'O') {
-        wsSend({ id:'claw', pos:1 }); // Open claw
+        wsSend({ id:'claw', pos:99 }); // Open claw
       } else if (keypress === 'P') {
         wsSend({ id:'claw', pos:0 });
       } else if (keypress === 'I') {
         wsSend({ id:'shoot' });
       } else if (keypress === 'X') {
-        if (speed < 10) {
+        if (speed < 99) {
           speed += 1;
         }
         $('#speed').html(speed);
@@ -66,6 +66,14 @@ function onLoad() {
     $('#LED4').click( function() { wsSend({ id:'led', num: 4 }); });
     $('#robopath').click( mazeClick );
     $('#livefeed').click( feedClick );
+
+    var switch_mode(mode) {
+      return function() { wsSend({ id:'state', state:mode }); };
+    };
+
+    $('#explore-tab').change(switch_mode('explore'))
+    $('#navigate-tab').change(switch_mode('navigate'))
+    $('#manual-tab').change(switch_mode('manual'))
   }
 }
 
@@ -85,9 +93,15 @@ function wsHandler() {
       var cell = new Cell(data.cell, maze);
       drawMaze(maze, cell, $('#robopath')[0]);
     } else if (data.id === 'moments') {
-      var x = data.m10/data.m00;
-      var y = data.m01/data.m00;
-      drawCircle(x, y, Math.sqrt(data.m00)/20, $('#livefeed')[0]);
+      var x, y, color
+      x = data.0m10/data.0m00;
+      y = data.0m01/data.0m00;
+      color = $('#ally-colored').css('color');
+      drawCircle(x, y, Math.sqrt(data.0m00)/20, color, $('#livefeed')[0]);
+      x = data.1m10/data.1m00;
+      y = data.1m01/data.1m00;
+      color = $('#enemy-colored').css('color');
+      drawCircle(x, y, Math.sqrt(data.1m00)/20, color, $('#livefeed')[0]);
     } else if (data.id === 'ir') {
       $('#ir-front-number').html(data.front.toFixed(2) + " in");
       $('#ir-left-number').html(data.left.toFixed(2) + " in");
@@ -101,11 +115,11 @@ function wsHandler() {
     } else if (data.id === 'shoot') {
       $('#shots-fired-number').html(data.num.toString());
     } else if (data.id === 'state') {
-      if (data.state === 'Explore') {
+      if (data.state === 'explore') {
         $('#explore-tab').attr('checked', true);
-      } else if (data.state === 'Manual') {
+      } else if (data.state === 'manual') {
         $('#manual-tab').attr('checked', true);
-      } else if (data.state === 'Navigate') {
+      } else if (data.state === 'navigate') {
         $('#navigate-tab').attr('checked', true);
       }
     } else if (data.id === 'color') {
@@ -117,7 +131,7 @@ function wsHandler() {
 
 
 
-function drawCircle(x, y, r, canvas) {
+function drawCircle(x, y, r, color, canvas) {
   if (canvas.getContext) {
 
     var ctx = canvas.getContext('2d');
@@ -134,7 +148,7 @@ function drawCircle(x, y, r, canvas) {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI, false);
     ctx.lineWidth = 5;
-    ctx.strokeStyle = '#003300';
+    ctx.strokeStyle = color;
     ctx.stroke();
   }
 }

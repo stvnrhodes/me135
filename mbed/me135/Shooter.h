@@ -56,6 +56,11 @@ class Shooter {
   bool isFiring(void);
 
   /**
+   * True if shot has been fired, false for subsequent calls
+   */
+  bool hasFired(void);
+
+  /**
    * Attaches a function to be called whenever the shooter fires
    */
   void attach(void (*func)(void));
@@ -76,6 +81,7 @@ class Shooter {
   volatile bool firing_;
   volatile bool just_fired_;
   void (*func_)(void);
+  volatile bool has_fired_;
 };
 
 }

@@ -18,6 +18,7 @@ me135::Claw claw(p29);
 volatile int g_left_target_speed = 0;
 volatile int g_right_target_speed = 0;
 
+const char *dir_to_str[] = {"fwd", "left", "back", "right", "stop"};
 
 // We send the data back so we can have pretty graphs
 void send_ir(void) {
@@ -35,17 +36,29 @@ void send_encoder(void) {
   int len = sprintf(buffer, "{" KEY("id", "encoder")
                             "," KEY("left_enc", %d)
                             "," KEY("right_enc", %d) "}\n",
-                left_enc.getPeriod(), right_enc.getPeriod());
+                            left_enc.getPeriod(), right_enc.getPeriod());
   bone.write(buffer, len);
 }
 
-void send_walls(void) {
+void send_walls(Directions dir) {
   char buffer[256];
   char len = sprintf(buffer, "{" KEY("id","maze_walls")
                              "," KEY("left",%d)
                              "," KEY("right",%d)
                              "," KEY("center",%d)
-                             "}\n", left_ir < 5, right_ir < 5, front_ir < 5);
+                             "," KEY("action","%s") "}\n",
+                              left_ir < kWallDist,
+                              right_ir < kWallDist,
+                              front_ir < kWallDist,
+                              dir_to_str[dir]);
+  bone.write(buffer, len);
+}
+
+void send_claw_pos(const float claw_pos) {
+  int pos = (int)(claw_pos * 99);
+  char buffer[128];
+  char len = sprintf(buffer, "{" KEY("id","claw")
+                             "," KEY("pos",%d) "}\n", pos);
   bone.write(buffer, len);
 }
 
@@ -61,8 +74,6 @@ bool dist_control(const int final, const Directions dir) {
     dist = 0;
   }
   // TODO: Use walls to go straight
-  // left_enc->reset(0);
-  // right_enc->reset(0);
   int error = final - dist;
   int target = kDistP * error;
   if (dir == LEFT) {
@@ -160,7 +171,7 @@ int main() {
           dist_control_loop_timer.reset();
           bool done = dist_control(target_dist, target_dir);
           if (done) {
-            send_walls();
+            send_walls(target_dir);
             mode = IDLE;
           }
         }
@@ -170,12 +181,18 @@ int main() {
        // Do nothing, for now
        break;
     }
+    if (shooter.hasFired()) {
+      char buffer[128];
+      int len = sprintf(buffer, "{" KEY("id","shooter")
+                                "," KEY("shot", 1) "}\n");
+      bone.write(buffer, len);
+    }
     if (bone.readable()) {
       bone.read(msg, kMaxMsgSize);
       switch (msg[0]) {
         // Get walls
         case 'w': {
-          send_walls();
+          send_walls(STOP);
         }
         // gfXX - go direction for XX spaces
         case 'g': {
@@ -183,8 +200,14 @@ int main() {
             char dir = msg[1];
             switch(dir) {
               case 'f':
-                target_dist = kSquareSize * kClicksPerInch * kSpeedScaling;
-                target_dir = FWD;
+                // Prevent us from running into a wall!
+                if (front_ir > kWallDist) {
+                  target_dist = 0;
+                  target_dir = STOP;
+                } else {
+                  target_dist = kSquareSize * kClicksPerInch * kSpeedScaling;
+                  target_dir = FWD;
+                }
                 break;
               case 'r':
                 target_dist = kQuarterCircle * kClicksPerDeg * kSpeedScaling;
@@ -194,14 +217,13 @@ int main() {
                 target_dist = kQuarterCircle * kClicksPerDeg * kSpeedScaling;
                 target_dir = LEFT;
                 break;
-              case 'b':
-                target_dist = kHalfCircle * kClicksPerDeg * kSpeedScaling;
-                target_dir = LEFT;
-                break;
               default:
                 // Not recognized, do nothing
                 break;
             }
+            // We have to reset the encoders so we have the right distance
+            left_enc.reset(0);
+            right_enc.reset(0);
             mode = MOVING;
           }
           break;
@@ -223,6 +245,7 @@ int main() {
         case 'c': {
           int pos = (msg[1] - '0') * 10 + (msg[2] - '0');
           claw = pos / kMaxClawPos;
+          send_claw_pos(claw.read());
         }
         // Shooter
         case 's': {

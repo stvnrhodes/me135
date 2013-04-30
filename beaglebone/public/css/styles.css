@@ -114,6 +114,14 @@ body {
     box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #DB8F8D, 0 1px 0px #333;
 }
 
+#ally-colored{
+  color: #000000;
+}
+
+#enemy-colored{
+  color: #000000;
+}
+
 #title{
 margin-top:-60px;
 }

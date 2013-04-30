@@ -1,9 +1,8 @@
 // Set up logging first
 var log = require('winston');
-// log.add(log.transports.File, { filename: 'beaglebone.log', timestamp:true });
 var fs = require('fs');
 fs.unlink('public/log.log', function() {
-  log.add(log.transports.File, { filename: 'public/log.log', timestamp:true });
+  log.add(log.transports.File, { filename:'public/log.log', timestamp:true });
 });
 log.info("Starting program");
 
@@ -22,7 +21,7 @@ var net = require('net');
 var Maze = require('./public/maze.verbose.js').Maze;
 var Cell = require('./public/maze.verbose.js').Cell;
 
-var MazeManager = require('./maze_manager.js').MazeManager;
+var CarState = require('./car_state.js').CarState;
 
 // Create the socket for the OpenCV IPC, and return it in the callback
 function makeSocket(callback) {
@@ -113,62 +112,53 @@ function runServer (socket, uart) {
   var server = http.createServer(app);
   server.listen(8080);
 
-  var maze_manager = new MazeManager();
-  uart.on('data', function(x){maze_manager.update(x)});
-  maze_manager.on('action', function(dir) {
-    console.log(dir)
-    uart.write('g' + dir + '\n');
-  })
+  var car_state = new CarState();
+
+  pure_uart_handler(uart, car_state);
+  pure_socket_handler(socket);
+  uart_socket_handler(uart, socket);
 
   var wss = new WebSocketServer({server: server});
   wss.on('connection', function (ws) {
-    tripleHandler(ws, socket, uart);
-    maze_manager.on('update', mazeData)
-    function mazeData(data) {
-      var msg = JSON.stringify({id:'maze', maze:data.maze.getData(),
-                                cell:data.cell.getData()});
-      try {
-        ws.send(msg);
-      } catch(e) {
-        log.warn("Failed to send data to ws");
-        maze_manager.removeListener(mazeData);
-      }
-    }
+    log.info("Running websockets");
+    pure_ws_handler(ws, car_state);
+    ws_socket_handler(ws, socket);
+    ws_uart_handler(ws, uart, car_state);
   });
 
 }
 
-function tripleHandler(ws, socket, uart) {
-  log.info("Running websockets");
-  var maze = new Maze();
-  var cell = new Cell(0, 0, 'N', maze);
-
+function pure_ws_handler(ws, state) {
+  // Send state on initial connection
+  var msg;
+  msg = { id:'state', state: state.mode };
+  ws.send(JSON.stringify(msg));
+  msg = state.color_state;
+  ws.send(JSON.stringify(msg));
+  msg = { id:'shoot', num: state.num_shots };
+  ws.send(JSON.stringify(msg));
+  msg = { id:'claw_pos', claw: state.claw_pos };
+  ws.send(JSON.stringify(msg));
+  msg = { id:'maze', maze: state.maze.getData(), cell: state.cell.getData() };
+  ws.send(JSON.stringify(msg));
   ws.on('message', function(data, flags) {
     if (!flags.binary) {
-      log.verbose("Websocket message:" + data);
       var msg = JSON.parse(data);
-      if (msg.id === 'led') {
-        log.info("Toggling LED " + msg.num);
-        uart.write('l' + msg.num +'\n');
-      } else if (msg.id === 'move') {
-        if (msg.dir === 'f') {
-          cell.move(1);
-        } else if (msg.dir === 'l' || msg.dir === 'r') {
-          cell.turn(msg.dir);
-        }
-        uart.write('m' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
-      } else if (msg.id == 'pic_xy') {
-        try {
-          socket.write(data);
-        } catch(e) {
-          log.error("Socket fail: " + e);
-        }
+      if (msg.id === 'state') {
+        state.mode = msg.state;
       }
     }
   });
+}
 
-  uart.on('data', sendUartData);
-  function sendUartData(data) {
+function pure_uart_handler(uart, state) {
+  // Set initial claw position
+  uart.write('c' + (state.claw_pos < 10 ? '0' : '') + state.claw_pos);
+  // Get initial walls
+  uart.write('w');
+
+
+  uart.on('data', function (data) {
     // Data from uart is in JSON
     log.verbose("UART data received: " + data);
     var parsed = {}
@@ -178,80 +168,115 @@ function tripleHandler(ws, socket, uart) {
       log.warn("UART is not JSON: " + e)
     }
     if (parsed.id === 'maze_walls') {
-      // log.info(JSON.stringify(parsed));
-      // if (parsed.left) { cell.addWall('L'); }
-      // else { cell.addConnect('L'); }
-      // if (parsed.center) { cell.addWall('F'); }
-      // else { cell.addConnect('F'); }
-      // if (parsed.right) { cell.addWall('R'); }
-      // else { cell.addConnect('R'); }
-      // var msg = {id:'maze', maze:maze.getData(), cell:cell.getData()};
-      // data = JSON.stringify(msg);
+      log.info(JSON.stringify(parsed));
+      if (parsed.action === 'fwd') {
+        cell.move(1);
+      } else if (parsed.action === 'left') {
+        cell.turn('l');
+      } else if (parsed.action === 'right') {
+        cell.turn('r');
+      }
+      if (parsed.left) { state.cell.addWall('L'); }
+      else { state.cell.addConnect('L'); }
+      if (parsed.center) { state.cell.addWall('F'); }
+      else { state.cell.addConnect('F'); }
+      if (parsed.right) { state.cell.addWall('R'); }
+      else { state.cell.addConnect('R'); }
+      var msg = {id:'maze', maze:state.maze.getData(),
+                            cell:state.cell.getData()};
+      data = JSON.stringify(msg);
+    }
+  });
+
+}
+
+function pure_socket_handler(socket) {
+
+}
+
+function ws_socket_handler(ws, socket) {
+  ws.on('message', function(data, flags) {
+    if (!flags.binary) {
+      log.verbose("Websocket message:" + data);
+      var msg = JSON.parse(data);
+      if (msg.id == 'pic_xy') {
+        try {
+          socket.write(data);
+        } catch(e) {
+          log.error("Socket fail: " + e);
+        }
+      }
+    }
+  });
+
+  function sendCvData(data) {
+    log.verbose('OpenCV data received: ' + data);
+    var msg = {};
+    try {
+      msg = JSON.parse(data);
+    } catch(e) {
+      log.warn("Socket: " + e);
+    }
+    if (msg.id === 'moments' || msg.id === 'color') {
+      ws.send(data, function(error) {
+        if (error) {
+          log.warn('ws: ' + error);
+          socket.removeListener('data', sendCvData);
+        }
+      });
+    }
+  }
+  socket.on('data', sendCvData);
+}
+
+function uart_socket_handler(uart, socket) {
+
+}
+
+function ws_uart_handler(ws, uart, state) {
+  ws.on('message', function(data, flags) {
+    if (!flags.binary) {
+      log.verbose("Websocket message:" + data);
+      var msg = JSON.parse(data);
+      if (msg.id === 'led') {
+        log.info("Toggling LED " + msg.num);
+        uart.write('l' + msg.num +'\n');
+      } else if (msg.id === 'claw') {
+        uart.write('c' + (msg.pos < 10 ? '0' : '') + msg.pos + '\n');
+      } else if (msg.id === 'shoot') {
+        uart.write('s' + '\n');
+      } else if (msg.id === 'move') {
+        if (state.mode === 'manual') {
+          uart.write('m' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
+        } else if (state.mode === 'navigate') {
+          uart.write('g' + msg.dir + "\n");
+        }
+      }
+    }
+  });
+
+  function sendUartData(data) {
+    // Data from uart is in JSON
+    log.verbose("UART data received: " + data);
+    var parsed = {}
+    try {
+      parsed = JSON.parse(data);
+    } catch(e) {
+      log.warn("UART is not JSON: " + e)
     }
     try {
-      ws.send(data);
+      if (parsed.id === 'encoder' ||
+          parsed.id === 'ir' ||
+          parsed.id === 'claw') {
+        ws.send(data);
+      } else if (parsed.id === 'shoot') {
+        ws.send(JSON.stringify({ id:'shoot', num: state.num_shots }));
+      }
     } catch(e) {
       log.warn("UART: " + e);
       uart.removeListener('data', sendUartData);
     }
   };
-  // Get initial walls
-  uart.write('w')
+  uart.on('data', sendUartData);
 
-  socket.on('data', sendCvData);
-  function sendCvData(data) {
-    log.verbose('OpenCV data received: ' + data);
-    try {
-      var msg = JSON.parse(data);
-      if (msg.id === 'moments') {
-        ws.send(data, function(error) {
-          if (error) {
-            log.warn('ws: ' + error);
-            socket.removeListener('data', sendCvData);
-          }
-        });
-      }
-    } catch(e) {
-      log.warn("Socket: " + e);
-    }
-  }
-
-  // Included for testing
-  // randomMaze(ws);
-}
-
-// Create a random maze and continually update it, useful for testing
-function randomMaze (ws) {
-  log.verbose("Sending random maze");
-  var m = new Maze();
-  var i = 0;
-  var j = 0;
-  var dir = 'E';
-  var directions = ['N','S','E','W'];
-  var mazeDrawer = setInterval(function() {
-    var chance = Math.random() * 4;
-    if (chance < 1) {
-      j++;
-      dir = 'E';
-    } else if (chance < 2) {
-      j--;
-      dir = 'W';
-    } else if (chance < 3) {
-      i++;
-      dir = 'S';
-    } else if (chance < 4) {
-      i--;
-      dir = 'N';
-    }
-
-    var c = new Cell(i, j, dir, m);
-    c.addWall('L');
-    var msg = {id:'maze', maze:m.getData(), cell:c.getData()};
-    ws.send(JSON.stringify(msg), function(error) {
-      if (error) {
-        log.error("Websocket " + error);
-        clearInterval(mazeDrawer);
-      }
-    });
-  }, 100);
 }

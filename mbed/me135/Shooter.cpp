@@ -38,6 +38,15 @@ void Shooter::spindown(void) {
   just_fired_ = false;
 }
 
+bool Shooter::hasFired(void) {
+  if (has_fired_) {
+    has_fired_ = false;
+    return true;
+  } else {
+    return false;
+  }
+}
+
 void Shooter::fire(void) {
   if (!firing_) {
     firing_ = true;
