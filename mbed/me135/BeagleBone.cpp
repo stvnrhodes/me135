@@ -16,21 +16,19 @@ bool BeagleBone::readable(void) {
 }
 
 void BeagleBone::read(char *str, const int len) {
-  output_mutex_.lock();
-  NVIC_DisableIRQ(UART1_IRQn);
+  NVIC_DisableIRQ(UART3_IRQn);
   char c = 0;
   for (int i = 0; c != '\n' && i < len; i++) {
     if (!readable()) {
-      NVIC_EnableIRQ(UART1_IRQn);
+      NVIC_EnableIRQ(UART3_IRQn);
       while(!readable());
-      NVIC_DisableIRQ(UART1_IRQn);
+      NVIC_DisableIRQ(UART3_IRQn);
     }
     c = rx_buffer_[rx_out_];
     str[i] = c;
     rx_out_ = (rx_out_ + 1) % kBufferLen;
   }
-  NVIC_EnableIRQ(UART1_IRQn);
-  output_mutex_.unlock();
+  NVIC_EnableIRQ(UART3_IRQn);
   return;
 }
 
@@ -39,14 +37,14 @@ bool BeagleBone::writeable_(void) {
 }
 
 void BeagleBone::write(const char *str, const int len) {
-  NVIC_DisableIRQ(UART1_IRQn);
+  NVIC_DisableIRQ(UART3_IRQn);
   char c = 0;
   bool empty = tx_in_ == tx_out_;
   for (int i = 0; c != '\n' && i < len; i++) {
     if (!writeable_()) {
-      NVIC_EnableIRQ(UART1_IRQn);
+      NVIC_EnableIRQ(UART3_IRQn);
       while(!writeable_());
-      NVIC_DisableIRQ(UART1_IRQn);
+      NVIC_DisableIRQ(UART3_IRQn);
     }
     c = str[i];
     tx_buffer_[tx_in_] = c;
@@ -58,7 +56,7 @@ void BeagleBone::write(const char *str, const int len) {
     tx_out_ = (tx_out_ + 1) % kBufferLen;
     uart_.putc(c);
   }
-  NVIC_EnableIRQ(UART1_IRQn);
+  NVIC_EnableIRQ(UART3_IRQn);
   return;
 }
 

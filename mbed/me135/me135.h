@@ -14,31 +14,25 @@
 #include "Shooter.h"
 #include "IRSensor.h"
 #include "QEI.h"
-// Very odd, it doesn't compile if you declare it here
-//#include "TankDrive.h"
 
+
+const int kSpeedControlLoopTime = 50000; // in us
 const int kSendDataTime = 200; // in ms, time between sending data for graphs
+const int kQuarterCircle = 90;
+const int kHalfCircle = 180;
+const int kUsPerS = 1000000;
+const int kSpeedScaling = 1000;
+const int kSpeedI = 0;
+const int kSpeedOL = 1;
+const int kSpeedP = 1;
+const int kDistP = 1;
+const int kClicksPerInch = 10;
+const float kMaxPrescaledSpeed = 1000;
 const float kSquareSize = 12; // in inches
-
-const int FAKE_MAZE_ROWS = 4;
-const int FAKE_MAZE_COLUMNS = 4;
-const bool fake_maze[4][4][4] = {{{1,1,0,0},{1,0,1,0},{1,0,0,0},{1,0,0,1}},
-                                 {{0,1,1,1},{1,1,0,1},{0,1,1,1},{0,1,0,1}},
-                                 {{1,1,0,1},{0,1,1,0},{1,0,0,0},{0,0,1,1}},
-                                 {{0,1,1,0},{1,0,1,0},{0,0,1,0},{1,0,1,1}}};
-
-// const int FAKE_MAZE_ROWS = 2;
-// const int FAKE_MAZE_COLUMNS = 2;
-// const bool fake_maze[2][2][4] = {{{1,1,0,0},{1,0,1,1}},
-//                                 {{0,1a,1,0},{1,0,1,1}}};
-
-typedef enum {
-  WAITING,
-  MOVE_FORWARD,
-  TURN_LEFT,
-  TURN_RIGHT,
-  ERROR
-} Modes;
+const int kMaxMsgSize = 10;
+const int kBufferSize = 256;
+const float kMaxSpeed = 99.0f;
+const float kMaxClawPos = 99.0f;
 
 typedef enum {
   UP=0,
@@ -46,13 +40,14 @@ typedef enum {
   LEFT=1,
   DOWN=2,
   BACK=2,
-  RIGHT=3
+  RIGHT=3,
+  STOP=4
 } Directions;
-// real_direction[orientation][direction]
-const Directions real_direction[4][4] = {{UP, LEFT, DOWN, RIGHT},
-                                         {LEFT, DOWN, RIGHT, UP},
-                                         {DOWN, RIGHT, UP, LEFT},
-                                         {RIGHT, UP, LEFT, DOWN}};
+
+typedef enum {
+  IDLE,
+  MOVING
+} Modes;
 
 template <typename T>
 inline T constrain(T x, T min, T max){
@@ -72,6 +67,20 @@ inline T max(T x, T y) {
 template <typename T>
 inline T min(T x, T y) {
   return x < y ? x : y;
+}
+
+inline Directions charToDirection(char c) {
+  if (c == 'f') {
+    return FWD;
+  } else if (c == 'b') {
+    return BACK;
+  } else if (c == 'r') {
+    return RIGHT;
+  } else if (c == 'l') {
+    return LEFT;
+  } else {
+    return STOP;
+  }
 }
 
 #endif /* ME135_H_ */

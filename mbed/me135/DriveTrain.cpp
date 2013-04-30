@@ -10,12 +10,14 @@ DriveTrain::DriveTrain(PinName fwd, PinName rev) : fwd_(fwd), rev_(rev) {
 
 void DriveTrain::write(float rate) {
   rate_ = constrain<float>(rate, -1, 1);
-  if (rate > 0) {
+  if (rate > 0.01) {
     fwd_ = rate;
     rev_ = 0;
-  } else {
+  } else if (rate < -0.01) {
     fwd_ = 0;
     rev_ = -rate;
+  } else {
+    brake(1);
   }
 }
 

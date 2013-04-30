@@ -1,85 +1,135 @@
-// Print "Hello World" to the PC
-
 #include "mbed.h"
-#include "rtos.h"
 #include "me135.h"
-#include "TankDrive.h"
 #define VERBOSE
 #define KEY(x,y) #x ":" #y
-static const int kPuslesPerRotation = 333;
 
-DigitalOut led1(LED1);
-DigitalOut led2(LED2);
-DigitalOut led3(LED3);
-DigitalOut led4(LED4);
+BusOut leds(LED1, LED2, LED3, LED4);
 me135::BeagleBone bone(p9, p10);
-QEI right_encoder(p11, p12);
-QEI left_encoder(p13, p14);
-me135::IRSensor front(p15);
-me135::IRSensor left(p16);
-me135::IRSensor right(p17);
+QEI right_enc(p11, p12);
+QEI left_enc(p13, p14);
+me135::IRSensor front_ir(p15);
+me135::IRSensor left_ir(p16);
+me135::IRSensor right_ir(p17);
 me135::DriveTrain right_drive(p21, p22);
 me135::DriveTrain left_drive(p24, p23);
 me135::Shooter shooter(p28, p25, p26);
 me135::Claw claw(p29);
-me135::TankDrive tank(&left_drive, &right_drive, &left_encoder, &right_encoder);
-Timer encTimer;
 
-const int MAX_MSG_SIZE = 10;
-const float MAX_SPEED = 10.0;
+volatile int g_left_target_speed = 0;
+volatile int g_right_target_speed = 0;
+
 
 // We send the data back so we can have pretty graphs
-void sendSensorData(const void* args) {
+void send_ir(void) {
+  printf("sending ir\r\n");
   char buffer[256];
-  char len;
-  for (;;) {
-    len = sprintf(buffer, "{" KEY("id","ir")
-                          "," KEY("front", %f)
-                          "," KEY("left",%f)
-                          "," KEY("right",%f) "}\n",
-                          front.read(), left.read(), right.read());
-    bone.write(buffer, len);
-    len = sprintf(buffer, "{" KEY("id", "encoder")
-                          "," KEY("left_encoder", %d)
-                          "," KEY("right_encoder", %d) "}\n",
-                  left_encoder.getPeriod(), right_encoder.getPeriod());
-    bone.write(buffer, len);
-    Thread::wait(kSendDataTime);
-  }
+  int len = sprintf(buffer, "{" KEY("id","ir")
+                            "," KEY("front", %f)
+                            "," KEY("left",%f)
+                            "," KEY("right",%f) "}\n",
+                        front_ir.read(), left_ir.read(), right_ir.read());
+  printf("%s", buffer);
+  bone.write(buffer, len);
 }
 
-void dist_callback(void) {
+void send_encoder(void) {
+  printf("sending encoder\r\n");
+  char buffer[256];
+  int len = sprintf(buffer, "{" KEY("id", "encoder")
+                            "," KEY("left_enc", %d)
+                            "," KEY("right_enc", %d) "}\n",
+                left_enc.getPeriod(), right_enc.getPeriod());
+  bone.write(buffer, len);
+}
+
+void send_walls(void) {
   char buffer[256];
   char len = sprintf(buffer, "{" KEY("id","maze_walls")
                              "," KEY("left",%d)
                              "," KEY("right",%d)
                              "," KEY("center",%d)
-                             "}", left < 5, right < 5, front < 5);
+                             "}\n", left_ir < 5, right_ir < 5, front_ir < 5);
   bone.write(buffer, len);
 }
 
-void runMotors(float spd, char func) {
-  spd = spd / MAX_SPEED;
-  switch (func) {
-    case 'f':  // Forwards
-      right_drive = spd;
-      left_drive = spd;
+bool dist_control(const int final, const Directions dir) {
+  int dist;
+  if (dir == FWD) {
+    dist = min(left_enc.getPulses(0), right_enc.getPulses(0));
+  } else if (dir == LEFT) {
+    dist = min(-left_enc.getPulses(0), right_enc.getPulses(0));
+  } else if (dir == RIGHT) {
+    dist = min(left_enc.getPulses(0), -right_enc.getPulses(0));
+  } else {
+    dist = 0;
+  }
+  // TODO: Use walls to go straight
+  // left_enc->reset(0);
+  // right_enc->reset(0);
+  int error = final - dist;
+  int target = kDistP * error;
+  if (dir == LEFT) {
+    g_left_target_speed = -target;
+  } else {
+    g_left_target_speed = target;
+  }
+  if (dir == RIGHT) {
+    g_right_target_speed = -target;
+  } else {
+    g_right_target_speed = target;
+  }
+
+  // True if complete
+  return dist > final;
+}
+
+// PI Control
+// Uses the global g_target_speed
+void speed_control(void) {
+//  static int i_term_l = 0;
+//  static int i_term_r = 0;
+
+  int left_speed = kUsPerS * kSpeedScaling / left_enc.getPeriod();
+  int right_speed = kUsPerS * kSpeedScaling / right_enc.getPeriod();
+
+  // DUMB BANG BANG
+  left_speed > g_left_target_speed ? left_drive = 0 : left_drive = 1;
+  right_speed > g_right_target_speed ? right_drive = 0 : right_drive = 1;
+
+  // Actual code?
+  // int l_error = g_left_target_speed - l_speed;
+  // i_term_l += kSpeedI * error;
+  // int left_power = kSpeedOL * left_speed + kSpeedP * error + i_term_l;
+  // left_drive = constrain(left_power / kMaxPrescaledSpeed, -1, 1);
+
+  // int r_error = g_right_target_speed - r_speed;
+  // i_term_r += kSpeedI * error;
+  // int right_power = kSpeedOL * right_speed + kSpeedP * error + i_term_r;
+  // right_drive = constrain(right_power / kMaxPrescaledSpeed, -1, 1);
+}
+
+void runMotors(const int speed, const Directions dir) {
+  float spd = speed / kMaxSpeed;
+  switch (dir) {
+    case FWD:  // Forwards
+      g_right_target_speed = spd;
+      g_left_target_speed = spd;
       break;
-    case 'b':  // Backwards
-      right_drive = -spd;
-      left_drive = -spd;
+    case BACK:  // Backwards
+      g_right_target_speed = -spd;
+      g_left_target_speed = -spd;
       break;
-    case 'r':  // Right
-      right_drive = -spd;
-      left_drive = spd;
+    case RIGHT:  // Right
+      g_right_target_speed = -spd;
+      g_left_target_speed = spd;
       break;
-    case 'l':  // Left
-      right_drive = spd;
-      left_drive = -spd;
+    case LEFT:  // Left
+      g_right_target_speed = spd;
+      g_left_target_speed = -spd;
       break;
-    case 's':  // Stop
-      right_drive.brake(spd);
-      left_drive.brake(spd);
+    case STOP:  // Stop
+      g_right_target_speed = 0;
+      g_left_target_speed = 0;
       break;
   }
 }
@@ -89,130 +139,77 @@ void coast(void) {
   left_drive = 0;
 }
 
-void print_walls(Directions orientation, int xc, int yc) {
-  const bool *walls = fake_maze[xc][yc];
-  bool left = walls[real_direction[orientation][LEFT]];
-  bool front = walls[orientation];
-  bool right = walls[real_direction[orientation][RIGHT]];
-
-  char buffer[256];
-  char len;
-  len = sprintf(buffer, "{" KEY("id", "maze_walls")
-                        "," KEY("left", %d)
-                        "," KEY("center", %d)
-                        "," KEY("right", %d)
-                        "," KEY("x", %d)
-                        "," KEY("y", %d)
-                        "," KEY("dir", %d) "}\n",
-                left, front, right, xc, yc, orientation);
-  bone.write(buffer, len);
-}
-
 int main() {
+  Ticker speed_loop_ticker;
+  speed_loop_ticker.attach_us(speed_control, kSpeedControlLoopTime);
 
-  Thread(sendSensorData, NULL, osPriorityLow);
-  Timer simulation_timer;
-  simulation_timer.start();
   Timeout motor_safety;
-  encTimer.start();
-  Timer ir_timer;
-  ir_timer.start();
-  Modes mode = WAITING;
-  int xc = 0;
-  int yc = 0;
-  Directions orientation = UP;
 
-  char msg[MAX_MSG_SIZE];
+  Timer send_data_timer;
+  send_data_timer.start();
+
+  int target_dist = 0; // Used in distance mode;
+  Directions target_dir = STOP; // Used in distance mode;
+  Modes mode = IDLE;
+
+  char msg[kMaxMsgSize];
   for (;;) {
     switch (mode) {
-      case WAITING:
-        simulation_timer.reset();
-        break;
-      case MOVE_FORWARD:
-        if (simulation_timer.read() > 0.1) {
-          switch(orientation) {
-            case UP:
-              if (fake_maze[xc][yc][UP] || xc == 0) {
-                printf("We just ran into a wall\r\n");
-              } else {
-                xc -= 1;
-              }
-              break;
-            case DOWN:
-              if (fake_maze[xc][yc][DOWN] || xc == FAKE_MAZE_ROWS - 1) {
-                printf("We just ran into a wall\r\n");
-              } else {
-                xc += 1;
-              }
-              break;
-            case LEFT:
-              if (fake_maze[xc][yc][LEFT] || yc == 0) {
-                printf("We just ran into a wall\r\n");
-              } else {
-                yc -= 1;
-              }
-              break;
-            case RIGHT:
-              if (fake_maze[xc][yc][RIGHT] || yc == FAKE_MAZE_COLUMNS - 1) {
-                printf("We just ran into a wall\r\n");
-              } else {
-                yc += 1;
-              }
-              break;
-          }
-          print_walls(orientation, xc, yc);
-          mode = WAITING;
+      case MOVING: {
+        bool done = dist_control(target_dist, target_dir);
+        if (done) {
+          send_walls();
+          mode = IDLE;
         }
-        break;
-      case TURN_RIGHT:
-        if (simulation_timer.read() > 0.1) {
-          orientation = real_direction[orientation][RIGHT];
-          print_walls(orientation, xc, yc);
-          mode = WAITING;
-        }
-        break;
-      case TURN_LEFT:
-        if (simulation_timer.read() > 0.1) {
-          orientation = real_direction[orientation][LEFT];
-          print_walls(orientation, xc, yc);
-          mode = WAITING;
-        }
-        break;
-      case ERROR:
+      }
+      case IDLE:
       default:
-        break;
+       // Do nothing, for now
+       break;
     }
     if (bone.readable()) {
-      bone.read(msg, MAX_MSG_SIZE);
+      bone.read(msg, kMaxMsgSize);
       switch (msg[0]) {
         // Get walls
         case 'w': {
-          print_walls(orientation, xc, yc);
+          send_walls();
         }
         // gfXX - go direction for XX spaces
         case 'g': {
-          char dir = msg[1];
-          switch(dir) {
-            case 'f':
-              tank.goDist(kSquareSize, dist_callback, FWD);
-              break;
-            case 'r':
-              mode = TURN_RIGHT;
-              break;
-            case 'l':
-              mode = TURN_LEFT;
-              break;
-            default:
-              mode = WAITING;
+          if (mode == IDLE) {
+            char dir = msg[1];
+            switch(dir) {
+              case 'f':
+                target_dist = kSquareSize;
+                target_dir = FWD;
+                break;
+              case 'r':
+                target_dist = kQuarterCircle;
+                target_dir = RIGHT;
+                break;
+              case 'l':
+                target_dist = kQuarterCircle;
+                target_dir = LEFT;
+                break;
+              case 'b':
+                target_dist = kHalfCircle;
+                target_dir = LEFT;
+                break;
+              default:
+                // Not recognized, do nothing
+                break;
+            }
+            mode = MOVING;
           }
           break;
         }
         // mfXX - go direction at speed, with safety after .5s
         case 'm': {
-          char dir = msg[1];
+          mode = IDLE;
+          Directions dir = charToDirection(msg[1]);
           int spd = (msg[2] - '0') * 10 + (msg[3] - '0');
-          runMotors(spd * 1.0, dir);
-          if (dir != 's') {
+          runMotors(spd, dir);
+          if (dir != STOP) {
             motor_safety.attach(coast, 0.5);
           } else {
             motor_safety.detach();
@@ -222,30 +219,20 @@ int main() {
         // Shooter
         case 's': {
           shooter.fire();
-		      break;
+          break;
         }
         case 'l': { // LEDs
-          switch(msg[1]) {
-            case '1': {
-              led1 = !led1;
-              break;
-            }
-            case '2': {
-              led2 = !led2;
-              break;
-            }
-            case '3': {
-              led3 = !led3;
-              break;
-            }
-            case '4': {
-              led4 = !led4;
-              break;
-            }
-          }
+          leds = leds ^ (1 << (msg[1] - '1'));
           break;
         }
       }
     }
+
+    if (send_data_timer.read_us() > kSendDataTime) {
+      send_data_timer.reset();
+      send_ir();
+      send_encoder();
+    }
   }
+  return -1; // End of program, should never be reached
 }
