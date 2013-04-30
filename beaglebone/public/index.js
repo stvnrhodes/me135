@@ -67,7 +67,7 @@ function onLoad() {
     $('#robopath').click( mazeClick );
     $('#livefeed').click( feedClick );
 
-    var switch_mode(mode) {
+    var switch_mode = function(mode) {
       return function() { wsSend({ id:'state', state:mode }); };
     };
 
@@ -83,8 +83,8 @@ function wsHandler() {
   return function(event) {
     var data = JSON.parse(event.data);
     if (data.id === 'encoder') {
-      $('#enc-left-number').html(data.left_encoder.toFixed(2) + " f/s");
-      $('#enc-right-number').html(data.right_encoder.toFixed(2) + " f/s");
+      $('#enc-left-number').html(data.left.toFixed(2) + " f/s");
+      $('#enc-right-number').html(data.right.toFixed(2) + " f/s");
       enc_graph.push(data.left_encoder, 0);
       enc_graph.push(data.right_encoder, 1);
       enc_graph.draw()
@@ -94,14 +94,14 @@ function wsHandler() {
       drawMaze(maze, cell, $('#robopath')[0]);
     } else if (data.id === 'moments') {
       var x, y, color
-      x = data.0m10/data.0m00;
-      y = data.0m01/data.0m00;
+      x = data['0m10']/data['0m00'];
+      y = data['0m01']/data['0m00'];
       color = $('#ally-colored').css('color');
-      drawCircle(x, y, Math.sqrt(data.0m00)/20, color, $('#livefeed')[0]);
-      x = data.1m10/data.1m00;
-      y = data.1m01/data.1m00;
+      drawCircle(x, y, Math.sqrt(data['0m00'])/20, color, $('#livefeed')[0]);
+      x = data['1m10']/data['1m00'];
+      y = data['1m01']/data['1m00'];
       color = $('#enemy-colored').css('color');
-      drawCircle(x, y, Math.sqrt(data.1m00)/20, color, $('#livefeed')[0]);
+      drawCircle(x, y, Math.sqrt(data['1m00'])/20, color, $('#livefeed')[0]);
     } else if (data.id === 'ir') {
       $('#ir-front-number').html(data.front.toFixed(2) + " in");
       $('#ir-left-number').html(data.left.toFixed(2) + " in");
@@ -111,7 +111,7 @@ function wsHandler() {
       ir_graph.push(data.right,2);
       ir_graph.draw();
     } else if (data.id === 'claw') {
-      $('#claw-pos-number').html(data.claw.toFixed(2) + '%');
+      $('#claw-pos-number').html(data.pos.toFixed(0) + '%');
     } else if (data.id === 'shoot') {
       $('#shots-fired-number').html(data.num.toString());
     } else if (data.id === 'state') {
@@ -154,7 +154,7 @@ function drawCircle(x, y, r, color, canvas) {
 }
 
 // Eww, a global! Be wary.
-var mazeClickInfo;
+var mazeClickInfo = {};
 
 // This function will be somewhat confusing because the maze uses
 // x as row number and y as column number instead of x as width

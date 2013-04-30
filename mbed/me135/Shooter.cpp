@@ -89,6 +89,7 @@ void Shooter::recock_(void) {
 void Shooter::done_(void) {
   firing_ = false;
   just_fired_ = true;
+  has_fired_ = true;
   firing_timeout_.attach_us(this, &Shooter::spindown, kSpindownTime);
   if (func_ != NULL) {
     func_();

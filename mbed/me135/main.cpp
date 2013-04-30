@@ -34,9 +34,18 @@ void send_ir(void) {
 void send_encoder(void) {
   char buffer[256];
   int len = sprintf(buffer, "{" KEY("id", "encoder")
-                            "," KEY("left_enc", %d)
-                            "," KEY("right_enc", %d) "}\n",
+                            "," KEY("left", %d)
+                            "," KEY("right", %d) "}\n",
                             left_enc.getPeriod(), right_enc.getPeriod());
+  bone.write(buffer, len);
+}
+
+void send_encoder_count(void) {
+  char buffer[256];
+  int len = sprintf(buffer, "{" KEY("id", "encoder")
+                            "," KEY("left", %d)
+                            "," KEY("right", %d) "}\n",
+                            left_enc.getPulses(1), right_enc.getPulses(1));
   bone.write(buffer, len);
 }
 
@@ -246,6 +255,7 @@ int main() {
           int pos = (msg[1] - '0') * 10 + (msg[2] - '0');
           claw = pos / kMaxClawPos;
           send_claw_pos(claw.read());
+          break;
         }
         // Shooter
         case 's': {
@@ -263,6 +273,7 @@ int main() {
       send_data_timer.reset();
       send_ir();
       send_encoder();
+      send_encoder_count();
     }
   }
   return -1; // End of program, should never be reached

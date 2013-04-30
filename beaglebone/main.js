@@ -1,8 +1,11 @@
 // Set up logging first
-var log = require('winston');
-var fs = require('fs');
-fs.unlink('public/log.log', function() {
-  log.add(log.transports.File, { filename:'public/log.log', timestamp:true });
+var winston = require('winston');
+var Logger = require('winston').Logger;
+var log = new Logger({
+  transports: [
+    new (winston.transports.Console)({ level: 'info' }),
+    new (winston.transports.File)({ filename: 'log.log', level:'verbose' })
+  ]
 });
 log.info("Starting program");
 
@@ -41,7 +44,7 @@ function makeSocket(callback) {
 
 // Create the uart, and return it in the callback
 function makeUart(callback) {
-  var uart = new Uart('/dev/ttyO4', {
+  var uart = new Uart('/dev/tty.usbmodem1412', {
     baudrate: 115200,
     parser: serialport.parsers.readline("\n")
   });
@@ -145,6 +148,7 @@ function pure_ws_handler(ws, state) {
     if (!flags.binary) {
       var msg = JSON.parse(data);
       if (msg.id === 'state') {
+        log.info("Changing mode to " + msg.state);
         state.mode = msg.state;
       }
     }
@@ -182,9 +186,9 @@ function pure_uart_handler(uart, state) {
       else { state.cell.addConnect('F'); }
       if (parsed.right) { state.cell.addWall('R'); }
       else { state.cell.addConnect('R'); }
-      var msg = {id:'maze', maze:state.maze.getData(),
-                            cell:state.cell.getData()};
-      data = JSON.stringify(msg);
+    } else if (parsed.id === 'shooter') {
+      log.info(data)
+      state.num_shots += parsed.shot;
     }
   });
 
@@ -200,6 +204,7 @@ function ws_socket_handler(ws, socket) {
       log.verbose("Websocket message:" + data);
       var msg = JSON.parse(data);
       if (msg.id == 'pic_xy') {
+        log.info("Sending message to socket: " + data);
         try {
           socket.write(data);
         } catch(e) {
@@ -244,6 +249,7 @@ function ws_uart_handler(ws, uart, state) {
       } else if (msg.id === 'claw') {
         uart.write('c' + (msg.pos < 10 ? '0' : '') + msg.pos + '\n');
       } else if (msg.id === 'shoot') {
+        log.info(data)
         uart.write('s' + '\n');
       } else if (msg.id === 'move') {
         if (state.mode === 'manual') {
@@ -269,8 +275,13 @@ function ws_uart_handler(ws, uart, state) {
           parsed.id === 'ir' ||
           parsed.id === 'claw') {
         ws.send(data);
-      } else if (parsed.id === 'shoot') {
+      } else if (parsed.id === 'shooter') {
         ws.send(JSON.stringify({ id:'shoot', num: state.num_shots }));
+      } else if (parsed.id === 'maze_walls') {
+        // Dangerous, relies on pure handler firing first
+        var msg = {id:'maze', maze:state.maze.getData(),
+                             cell:state.cell.getData()};
+        ws.send(JSON.stringify(msg));
       }
     } catch(e) {
       log.warn("UART: " + e);
