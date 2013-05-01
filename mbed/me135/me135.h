@@ -15,22 +15,25 @@
 #include "IRSensor.h"
 #include "QEI.h"
 
-const int kWallDist = 5;
+const float kWallDist = 8;
 const int kDistControlLoopTime = 50000; // in us
 const int kSpeedControlLoopTime = 50000; // in us
 const int kSendDataTime = 200000; // in us, time between sending graph data
-const int kQuarterCircle = 300;
+const int kQuarterCircle = 390;
 const int kUsPerS = 1000000;
 const int kSpeedScaling = 1;
 const int kSpeedI = 10;
 const int kSpeedOL = 60;
 const int kSpeedP = 60;
-const int kDistP = 1;
+const int kStraighten = 5;
+const int kDistPNumerator = 0;//1000;
+const int kDistPDenominator = 10000;
+const int kDistOL = 20;
 const int kMaxITerm = 1000;
 const int kMinITerm = -1000;
 const int kClicksPerInch = 40;
 const float kMaxPrescaledSpeed = 3000;
-const float kSquareSize = 12; // in inches
+const float kSquareSize = 14; // in inches
 const int kMaxMsgSize = 10;
 const int kBufferSize = 256;
 const float kMaxSpeed = 99.0f;

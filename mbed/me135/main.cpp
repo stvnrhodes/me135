@@ -34,9 +34,10 @@ void send_ir(void) {
 void send_encoder(void) {
   char buffer[256];
   int len = sprintf(buffer, "{" KEY("id", "encoder")
-                            "," KEY("left", %d)
-                            "," KEY("right", %d) "}\n",
-                            left_enc.getPulses(2), right_enc.getPulses(2));
+                            "," KEY("left", %f)
+                            "," KEY("right", %f) "}\n",
+                            ((float)left_enc.getPulses(2)) / kClicksPerInch * kUsPerS / kSendDataTime,
+                            ((float)right_enc.getPulses(2)) / kClicksPerInch * kUsPerS / kSendDataTime);
   left_enc.reset(2);
   right_enc.reset(2);
   bone.write(buffer, len);
@@ -87,17 +88,27 @@ bool dist_control(const int final, const Directions dir) {
   }
   // TODO: Use walls to go straight
   int error = final - dist;
-  int target = kDistP * error;
+  int target = kDistPNumerator * error / kDistPDenominator + kDistOL;
+
+  // Ugly, should be refactored
+  int straighten = 0;
+  if (dir == FWD) {
+    float left_ir_val = left_ir;
+    float right_ir_val = right_ir;
+    if (left_ir_val < kWallDist && right_ir_val < kWallDist) {
+      straighten = (int) (kStraighten * (left_ir_val - right_ir_val));
+    }
+  }
   if (dist < final) {
     if (dir == LEFT) {
       g_left_target_speed = -target;
     } else {
-      g_left_target_speed = target;
+      g_left_target_speed = target - straighten;
     }
     if (dir == RIGHT) {
       g_right_target_speed = -target;
     } else {
-      g_right_target_speed = target;
+      g_right_target_speed = target + straighten;
     }
     return false;
   } else {
