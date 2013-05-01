@@ -16,4 +16,9 @@ echo 6 > /sys/kernel/debug/omap_mux/gpmc_wpn
 echo 26 > /sys/kernel/debug/omap_mux/gpmc_wait0
 stty -F /dev/ttyO4 115200
 
+# Wait a little bit
+sleep 6
+# Run the program
+node /home/stvn/me135/beaglebone/main.js
+
 exit 0

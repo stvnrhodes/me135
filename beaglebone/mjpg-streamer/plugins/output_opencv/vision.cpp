@@ -74,8 +74,8 @@ int Vision::loop(cv::Mat src) {
     sprintf(buffer, "{" KEY("id","color")
                     "," KEY("ally", "#%.2x%.2x%.2x")
                     "," KEY("enemy","#%.2x%.2x%.2x") "}\n",
-                    _true_color[0][0], _true_color[0][2], _true_color[0][2],
-                    _true_color[1][0], _true_color[1][2], _true_color[1][2]);
+                    _true_color[0][0], _true_color[0][1], _true_color[0][2],
+                    _true_color[1][0], _true_color[1][1], _true_color[1][2]);
     if (write(_sockfd, buffer, strlen(buffer)) < 0) {
       perror("writing on stream socket");
     }

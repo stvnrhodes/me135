@@ -10,6 +10,7 @@ var CarState = function() {
   this.color_state = { id: 'color', ally: '#000000', enemy: '#000000' };
   this.num_shots = 0;
   this.claw_pos = 0;
+  this.nav = null;
 }
 
 CarState.modes = ['explore', 'manual', 'navigate']

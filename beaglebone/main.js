@@ -21,10 +21,10 @@ var async = require('async');
 var net = require('net');
 
 // Shared code with browser
-var Maze = require('./public/maze.verbose.js').Maze;
-var Cell = require('./public/maze.verbose.js').Cell;
+var Maze = require(__dirname + '/public/maze.verbose.js').Maze;
+var Cell = require(__dirname + '/public/maze.verbose.js').Cell;
 
-var CarState = require('./car_state.js').CarState;
+var CarState = require(__dirname + '/car_state.js').CarState;
 
 // Create the socket for the OpenCV IPC, and return it in the callback
 function makeSocket(callback) {
@@ -69,11 +69,11 @@ async.parallel({
 
 // Starts mjpg_streamer, taking in from camera and outputting to
 // a web server and OpenCV
-var cmd = 'mjpg-streamer/mjpg_streamer';
+var cmd = __dirname + '/mjpg-streamer/mjpg_streamer';
 // Resolution is lower so we can process faster
-var args = ['-i','mjpg-streamer/input_uvc.so -r 320x240',
-            '-o','mjpg-streamer/output_http.so -p 8081',
-            '-o','mjpg-streamer/output_opencv.so']
+var args = ['-i',__dirname + '/mjpg-streamer/input_uvc.so -r 320x240',
+            '-o',__dirname + '/mjpg-streamer/output_http.so -p 8081',
+            '-o',__dirname + '/mjpg-streamer/output_opencv.so']
 // For global access
 var vision;
 function monitorProcess(spawned) {
@@ -118,7 +118,7 @@ function runServer (socket, uart) {
   var car_state = new CarState();
 
   pure_uart_handler(uart, car_state);
-  pure_socket_handler(socket);
+  pure_socket_handler(socket, car_state);
   uart_socket_handler(uart, socket);
 
   var wss = new WebSocketServer({server: server});
@@ -150,6 +150,7 @@ function pure_ws_handler(ws, state) {
       if (msg.id === 'state') {
         log.info("Changing mode to " + msg.state);
         state.mode = msg.state;
+        state.nav = null;
       }
     }
   });
@@ -173,19 +174,34 @@ function pure_uart_handler(uart, state) {
     }
     if (parsed.id === 'maze_walls') {
       log.info(JSON.stringify(parsed));
-      if (parsed.action === 'fwd') {
-        cell.move(1);
-      } else if (parsed.action === 'left') {
-        cell.turn('l');
-      } else if (parsed.action === 'right') {
-        cell.turn('r');
-      }
+
+      if (parsed.action === 'fwd') { state.cell.move(1); }
+      else if (parsed.action === 'left') { state.cell.turn('l'); }
+      else if (parsed.action === 'right') { state.cell.turn('r'); }
+
       if (parsed.left) { state.cell.addWall('L'); }
       else { state.cell.addConnect('L'); }
+
       if (parsed.center) { state.cell.addWall('F'); }
       else { state.cell.addConnect('F'); }
+
       if (parsed.right) { state.cell.addWall('R'); }
       else { state.cell.addConnect('R'); }
+
+      if (state.mode === 'explore') {
+        var dir = state.cell.getPathToUnknown();
+        if (dir) {
+          uart.write('g' + dir + '\n');
+        }
+      } else if (state.mode === 'navigate' && state.nav != null) {
+        var dir = state.cell.getPath(state.nav[0], state.nav[1]);
+        if (dir) {
+          uart.write('g' + dir + '\n');
+        } else {
+          state.nav = null;
+        }
+      }
+
     } else if (parsed.id === 'shooter') {
       log.info(data)
       state.num_shots += parsed.shot;
@@ -194,8 +210,18 @@ function pure_uart_handler(uart, state) {
 
 }
 
-function pure_socket_handler(socket) {
-
+function pure_socket_handler(socket, state) {
+  socket.on('data', function(data) {
+    var msg = {};
+    try {
+      msg = JSON.parse(data);
+    } catch(e) {
+      log.warn("Socket: " + e);
+    }
+    if (msg.id === 'color') {
+      state.color_state = msg;
+    }
+  });
 }
 
 function ws_socket_handler(ws, socket) {
@@ -215,7 +241,7 @@ function ws_socket_handler(ws, socket) {
   });
 
   function sendCvData(data) {
-    log.info('OpenCV data received: ' + data);
+    log.verbose('OpenCV data received: ' + data);
     var msg = {};
     try {
       msg = JSON.parse(data);
@@ -255,7 +281,16 @@ function ws_uart_handler(ws, uart, state) {
         if (state.mode === 'manual') {
           uart.write('m' + msg.dir + (msg.spd < 10 ? '0' : '') + msg.spd + "\n");
         } else if (state.mode === 'navigate') {
+          log.info(data);
+          state.nav = null;
           uart.write('g' + msg.dir + "\n");
+        }
+      } else if (msg.id === 'navigate' && state.mode === 'navigate') {
+        log.info(data);
+        state.nav = [msg.x, msg.y];
+        var dir = state.cell.getPath(state.nav[0], state.nav[1]);
+        if (dir) {
+          uart.write('g' + dir + '\n');
         }
       }
     }
