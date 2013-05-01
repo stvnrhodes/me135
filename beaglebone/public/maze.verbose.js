@@ -1,18 +1,4 @@
-// Maze data only stores every other cell
-//  Here's a 6x6 maze, XY.  We organize it as 3Wx6H.
-//  00  20  40
-//    11  31  51
-//  02  22  42
-//    13  33  53
-//  04  35  44
-//    15  35  55
-// Conveniently, only cells that add up to even numbers are present.
-
-
-// Make a maze of height x and width y.
-// This should be at least twice as big as the actual maze
-// This is because the real maze edges need to be inside the data structure
-// and we can start anywhere in the maze
+// Make a maze
 Maze = function(m) {
   this.node_list = [[new Node()]];
   this.xOffset = 0;
@@ -141,6 +127,9 @@ Maze.prototype.getPath = function(x0, y0, x1, y1) {
   var end = this._node(x1,y1);
   // Do maze finding algorithm here
   // We'll do breadth-first search
+  if (start === end) {
+    return null;
+  }
   var node = start;
   var fringe = []
   var path = {}
@@ -156,7 +145,7 @@ Maze.prototype.getPath = function(x0, y0, x1, y1) {
     }
     node = fringe.shift();
     if (!node) { // node is undefined if we empty the fringe
-      return;
+      return null;
     }
   }
   var answer = [];
@@ -373,6 +362,10 @@ Cell.prototype.addConnect = function(dir) {
 Cell.prototype.getPath = function(x,y) {
   // TODO: Benchmark, see if it's too slow when ran a lot
   var path = this.maze.getPath(this.x, this.y, x, y);
+  if (path === null) {
+    return null;
+  }
+
   // Turns relative coordinates into direction
   // Takes advantage of the ordering of the direction
   var dir;
@@ -381,7 +374,12 @@ Cell.prototype.getPath = function(x,y) {
   } else {
     dir = path[0][1] - this.y + 2
   }
-  return Cell.invDirTable[(dir - this.dir + 4) % 4];
+  var real_dir = (dir - this.dir + 4) % 4;
+  // Hardcoded to prevent turning around
+  if (real_dir === 2) {
+    real_dir = 1;
+  }
+  return Cell.invDirTable[real_dir];
 }
 
 Cell.prototype.getPathToUnknown = function() {
@@ -397,7 +395,12 @@ Cell.prototype.getPathToUnknown = function() {
   } else {
     dir = path[0][1] - this.y + 2
   }
-  return Cell.invDirTable[(dir - this.dir + 4) % 4];
+  var real_dir = (dir - this.dir + 4) % 4;
+  // Hardcoded to prevent turning around
+  if (real_dir === 2) {
+    real_dir = 1;
+  }
+  return Cell.invDirTable[real_dir];
 }
 
 // Turn F,R,L,B

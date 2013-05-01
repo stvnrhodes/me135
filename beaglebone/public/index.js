@@ -287,8 +287,10 @@ function mazeClick(evt) {
     var y = Math.floor((coords.x - mazeClickInfo.yOffset) / mazeClickInfo.cellSize);
     $('#mazeCoord').html("Cell clicked: " + (x+mazeClickInfo.x0) + "," +
         (y+mazeClickInfo.y0));
-    console.log(mazeClickInfo.cell.getPath(x+mazeClickInfo.x0,y+mazeClickInfo.y0));
-    console.log(mazeClickInfo.cell.getPathToUnknown())
+
+    wsSend({id:'navigate', x:x+mazeClickInfo.x0, y:y+mazeClickInfo.y0 });
+    // console.log(mazeClickInfo.cell.getPath(x+mazeClickInfo.x0,y+mazeClickInfo.y0));
+    // console.log(mazeClickInfo.cell.getPathToUnknown())
   }
 }
 
