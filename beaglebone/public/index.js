@@ -299,7 +299,8 @@ function feedClick(evt) {
   var coords = $('#livefeed')[0].relMouseCoords(evt);
   coords.id = 'pic_xy';
   // O for ally, 1 for enemy
-  coords.type = $('#cam-colors [type=radio]:checked')[0].value;
+  coords.type = parseInt($('#cam-colors [type=radio]:checked')[0].value);
+  console.log(coords)
   wsSend(coords);
 }
 

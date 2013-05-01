@@ -44,7 +44,7 @@ function makeSocket(callback) {
 
 // Create the uart, and return it in the callback
 function makeUart(callback) {
-  var uart = new Uart('/dev/tty.usbmodem1412', {
+  var uart = new Uart('/dev/ttyO4', {
     baudrate: 115200,
     parser: serialport.parsers.readline("\n")
   });
@@ -215,7 +215,7 @@ function ws_socket_handler(ws, socket) {
   });
 
   function sendCvData(data) {
-    log.verbose('OpenCV data received: ' + data);
+    log.info('OpenCV data received: ' + data);
     var msg = {};
     try {
       msg = JSON.parse(data);
