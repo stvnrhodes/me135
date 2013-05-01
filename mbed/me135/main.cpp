@@ -42,7 +42,7 @@ void send_encoder(void) {
                             "," KEY("left", %d)
                             "," KEY("right", %d) "}\n",
                             left_enc.getPulses(2), right_enc.getPulses(2));
-  printf("%d,%d,%d,%d,%d,%d\r\n",g_left_target_speed, g_right_target_speed, left_speed, right_speed, left_power, right_power);
+//  printf("%d,%d,%d,%d,%d,%d\r\n",g_left_target_speed, g_right_target_speed, left_speed, right_speed, left_power, right_power);
   left_enc.reset(2);
   right_enc.reset(2);
   bone.write(buffer, len);
@@ -80,6 +80,7 @@ void send_claw_pos(const float claw_pos) {
 }
 
 bool dist_control(const int final, const Directions dir) {
+//  static int i_term = 0;
   int dist;
   if (dir == FWD) {
     dist = min(left_enc.getPulses(0), right_enc.getPulses(0));
@@ -93,19 +94,24 @@ bool dist_control(const int final, const Directions dir) {
   // TODO: Use walls to go straight
   int error = final - dist;
   int target = kDistP * error;
-  if (dir == LEFT) {
-    g_left_target_speed = -target;
+//  printf("d:%d,f:%d,t:%d\r\n", dist, final, target);
+  if (dist < final) {
+    if (dir == LEFT) {
+      g_left_target_speed = -target;
+    } else {
+      g_left_target_speed = target;
+    }
+    if (dir == RIGHT) {
+      g_right_target_speed = -target;
+    } else {
+      g_right_target_speed = target;
+    }
+    return false;
   } else {
-    g_left_target_speed = target;
+    g_left_target_speed = 0;
+    g_right_target_speed = 0;
+    return true;
   }
-  if (dir == RIGHT) {
-    g_right_target_speed = -target;
-  } else {
-    g_right_target_speed = target;
-  }
-
-  // True if complete
-  return dist > final;
 }
 
 // PI Control
@@ -223,21 +229,20 @@ int main() {
             switch(dir) {
               case 'f':
                 // Prevent us from running into a wall!
-                if (front_ir > kWallDist) {
+                if (front_ir < kWallDist) {
                   target_dist = 0;
                   target_dir = STOP;
                 } else {
-                  target_dist = kSquareSize * kClicksPerInch * kSpeedScaling *
-                                kSpeedControlLoopTime / kUsPerS;
+                  target_dist = kSquareSize * kClicksPerInch;
                   target_dir = FWD;
                 }
                 break;
               case 'r':
-                target_dist = kQuarterCircle  * kSpeedScaling;
+                target_dist = kQuarterCircle;
                 target_dir = RIGHT;
                 break;
               case 'l':
-                target_dist = kQuarterCircle * kSpeedScaling;
+                target_dist = kQuarterCircle;
                 target_dir = LEFT;
                 break;
               default:
