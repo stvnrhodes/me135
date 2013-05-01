@@ -26,5 +26,6 @@ class Vision {
   void _thresholdImage(const cv::Mat img, const cv::Vec3b pixel, cv::Mat &output);
   int _sockfd;
   cv::Vec3b _color[kNumColors];
+  cv::Vec3b _true_color[kNumColors];
 };
 #endif // VISION_H

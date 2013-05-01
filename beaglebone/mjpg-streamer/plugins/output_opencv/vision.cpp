@@ -19,6 +19,8 @@ Vision::Vision(void) {
   }
   _color[0] = cv::Vec3b(0,0,0);
   _color[1] = cv::Vec3b(0,0,0);
+  _true_color[0] = cv::Vec3b(0,0,0);
+  _true_color[0] = cv::Vec3b(0,0,0);
 }
 
 Vision::~Vision(void) {
@@ -60,29 +62,32 @@ int Vision::loop(cv::Mat src) {
     }
 
     // Update the color we're seeking
-    int channel = msg.get("channel", -1).asInt();
+    int channel = msg.get("type", -1).asInt();
     int x = msg.get("x", -1 ).asInt();
     int y = msg.get("y", -1 ).asInt();
     if (channel != -1 && x != -1 && y != -1) {
+      _true_color[channel] = src.at<cv::Vec3b>(y, x);
       _color[channel] = _getPixel(src, x, y);
     }
+
     // TODO: Change to use streams
     sprintf(buffer, "{" KEY("id","color")
                     "," KEY("ally", "#%.2x%.2x%.2x")
-                    "," KEY("enemy","#%.2x%.2x%.2x")
-                    "}\n", _color[0][0], _color[0][2], _color[0][2],
-                           _color[1][0], _color[1][2], _color[1][2]);
-    if (write(_sockfd, outputConfig.c_str(), outputConfig.length()) < 0) {
+                    "," KEY("enemy","#%.2x%.2x%.2x") "}\n",
+                    _true_color[0][0], _true_color[0][2], _true_color[0][2],
+                    _true_color[1][0], _true_color[1][2], _true_color[1][2]);
+    if (write(_sockfd, buffer, strlen(buffer)) < 0) {
       perror("writing on stream socket");
     }
   }
 
   std::ostringstream output_stream;
-  output_stream << "{\"id\":\"moments\""
+  output_stream << "{" KEY("id", "moments");
   for (int i = 0; i < kNumColors; i++) {
-    if (_color[i][0] != 0 && _color[i][1] != 0 && color[i][2] != 0) {
-      _thresholdImage(src, _color, src);
-      cv::Moments moments = cv::moments(src);
+    if (_color[i][0] != 0 && _color[i][1] != 0 && _color[i][2] != 0) {
+      cv::Mat threshed;
+      _thresholdImage(src, _color[i], threshed);
+      cv::Moments moments = cv::moments(threshed);
       if (moments.m00 > 0) {
         output_stream << ",\"" << i << "m10\":" << moments.m10 <<
                          ",\"" << i << "m01\":" << moments.m01 <<
