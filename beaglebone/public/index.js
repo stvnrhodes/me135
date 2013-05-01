@@ -91,17 +91,21 @@ function wsHandler() {
     } else if (data.id === 'maze') {
       var maze = new Maze(data.maze);
       var cell = new Cell(data.cell, maze);
-      drawMaze(maze, cell, $('#robopath')[0]);
+      var canvas = $('#robopath')[0];
+      clear_canvas(canvas);
+      drawMaze(maze, cell, canvas);
     } else if (data.id === 'moments') {
       var x, y, color
+      var canvas = $('#livefeed')[0];
+      clear_canvas(canvas)
       x = data['0m10']/data['0m00'];
       y = data['0m01']/data['0m00'];
       color = $('#ally-colored').css('color');
-      drawCircle(x, y, Math.sqrt(data['0m00'])/20, color, $('#livefeed')[0]);
+      drawCircle(x, y, Math.sqrt(data['0m00'])/20, color, canvas);
       x = data['1m10']/data['1m00'];
       y = data['1m01']/data['1m00'];
       color = $('#enemy-colored').css('color');
-      drawCircle(x, y, Math.sqrt(data['1m00'])/20, color, $('#livefeed')[0]);
+      drawCircle(x, y, Math.sqrt(data['1m00'])/20, color, canvas);
     } else if (data.id === 'ir') {
       $('#ir-front-number').html(data.front.toFixed(2) + " in");
       $('#ir-left-number').html(data.left.toFixed(2) + " in");
@@ -129,9 +133,7 @@ function wsHandler() {
   }
 }
 
-
-
-function drawCircle(x, y, r, color, canvas) {
+function clear_canvas(canvas) {
   if (canvas.getContext) {
 
     var ctx = canvas.getContext('2d');
@@ -144,7 +146,12 @@ function drawCircle(x, y, r, color, canvas) {
 
     // Restore the transform
     ctx.restore();
+  }
+}
 
+function drawCircle(x, y, r, color, canvas) {
+  if (canvas.getContext) {
+    var ctx = canvas.getContext('2d');
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI, false);
     ctx.lineWidth = 5;
@@ -162,16 +169,6 @@ var mazeClickInfo = {};
 function drawMaze(maze, cell, canvas){
   if (canvas.getContext) {
     var ctx = canvas.getContext('2d');
-
-    // Store the current transformation matrix
-    ctx.save();
-
-    // Use the identity matrix while clearing the canvas
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Restore the transform
-    ctx.restore();
 
     var corners = maze.getCorners();
     var x0 = corners[0][0];

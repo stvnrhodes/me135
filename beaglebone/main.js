@@ -118,7 +118,7 @@ function runServer (socket, uart) {
   var car_state = new CarState();
 
   pure_uart_handler(uart, car_state);
-  pure_socket_handler(socket);
+  pure_socket_handler(socket, car_state);
   uart_socket_handler(uart, socket);
 
   var wss = new WebSocketServer({server: server});
@@ -194,8 +194,18 @@ function pure_uart_handler(uart, state) {
 
 }
 
-function pure_socket_handler(socket) {
-
+function pure_socket_handler(socket, state) {
+  socket.on('data', function(data) {
+    var msg = {};
+    try {
+      msg = JSON.parse(data);
+    } catch(e) {
+      log.warn("Socket: " + e);
+    }
+    if (msg.id === 'color') {
+      state.color_state = msg;
+    }
+  });
 }
 
 function ws_socket_handler(ws, socket) {
