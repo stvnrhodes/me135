@@ -12,7 +12,7 @@ me135::IRSensor left_ir(p16);
 me135::IRSensor right_ir(p17);
 me135::DriveTrain right_drive(p21, p22);
 me135::DriveTrain left_drive(p24, p23);
-me135::Shooter shooter(p28, p25, p26);
+me135::Shooter shooter(p28, p26, p25);
 me135::Claw claw(p29);
 
 volatile int g_left_target_speed = 0;
