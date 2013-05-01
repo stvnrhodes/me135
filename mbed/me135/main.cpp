@@ -229,6 +229,7 @@ int main() {
         // Get walls
         case 'w': {
           send_walls(STOP);
+          break;
         }
         // gfXX - go direction for XX spaces
         case 'g': {
