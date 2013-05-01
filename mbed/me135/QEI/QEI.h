@@ -71,13 +71,8 @@ public:
      */
     int getPulses(int ctr_num);
 
-    /**
-     * Gets the IIR of pulses, y(n) = x(n)/2 + y(n-1)/2
-     */
-    int getPeriod(void);
-
 private:
-    static const int kNumOfOffsets = 3;
+    static const int kNumOfOffsets = 4;
     /**
      * Update the pulse count.
      *
@@ -94,8 +89,6 @@ private:
     int prevState_;
     int currState_;
     int offset_[kNumOfOffsets];
-    int period_;
-    int last_time_;
 
     volatile int pulses_;
 

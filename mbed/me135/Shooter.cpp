@@ -16,7 +16,7 @@ Shooter::Shooter(PinName servo, PinName motor_fwd, PinName motor_rev):
   servo_pos_ = kServoIdle;
   func_ = NULL;
   firing_ = false;
-  just_fired_ = true;
+  just_fired_ = false;
   servo_ticker_.attach_us(this, &Shooter::on_, kServoTime);
 }
 
