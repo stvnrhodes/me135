@@ -17,11 +17,6 @@ me135::Claw claw(p29);
 
 volatile int g_left_target_speed = 0;
 volatile int g_right_target_speed = 0;
-// Temporary hack
-volatile int left_speed = 0;
-volatile int right_speed = 0;
-volatile int left_power = 0;
-volatile int right_power = 0;
 
 const char *dir_to_str[] = {"fwd", "left", "back", "right", "stop"};
 
@@ -42,7 +37,6 @@ void send_encoder(void) {
                             "," KEY("left", %d)
                             "," KEY("right", %d) "}\n",
                             left_enc.getPulses(2), right_enc.getPulses(2));
-//  printf("%d,%d,%d,%d,%d,%d\r\n",g_left_target_speed, g_right_target_speed, left_speed, right_speed, left_power, right_power);
   left_enc.reset(2);
   right_enc.reset(2);
   bone.write(buffer, len);
@@ -94,7 +88,6 @@ bool dist_control(const int final, const Directions dir) {
   // TODO: Use walls to go straight
   int error = final - dist;
   int target = kDistP * error;
-//  printf("d:%d,f:%d,t:%d\r\n", dist, final, target);
   if (dist < final) {
     if (dir == LEFT) {
       g_left_target_speed = -target;
@@ -120,27 +113,31 @@ void speed_control(void) {
   static int i_term_l = 0;
   static int i_term_r = 0;
 
-  /*int*/ left_speed = kSpeedScaling * left_enc.getPulses(3);
-  /*int*/ right_speed = kSpeedScaling * right_enc.getPulses(3);
+  int left_speed = kSpeedScaling * left_enc.getPulses(3);
+  int right_speed = kSpeedScaling * right_enc.getPulses(3);
   left_enc.reset(3);
   right_enc.reset(3);
 
-  // DUMB BANG BANG
-//  left_speed > g_left_target_speed ? left_drive = 0 : left_drive = 1;
-//  right_speed > g_right_target_speed ? right_drive = 0 : right_drive = 1;
 
-  // Actual code?
-   int l_error = g_left_target_speed - left_speed;
-   i_term_l += kSpeedI * l_error;
-   i_term_l = constrain(i_term_l, kMinITerm, kMaxITerm);
-   /*int*/ left_power = kSpeedOL * g_left_target_speed + kSpeedP * l_error + i_term_l;
-   left_drive = constrain(left_power / kMaxPrescaledSpeed, -1.0f, 1.0f);
+  // Early return if we're trying to stop, prevents grinding motor
+  if (g_left_target_speed == 0 && g_right_target_speed == 0) {
+    i_term_l = 0;
+    i_term_r = 0;
+    left_drive = 0;
+    right_drive = 0;
+  }
 
-   int r_error = g_right_target_speed - right_speed;
-   i_term_r += kSpeedI * r_error;
-   i_term_r = constrain(i_term_r, kMinITerm, kMaxITerm);
-   /*int*/ right_power = kSpeedOL * g_right_target_speed + kSpeedP * r_error + i_term_r;
-   right_drive = constrain(right_power / kMaxPrescaledSpeed, -1.0f, 1.0f);
+  int l_error = g_left_target_speed - left_speed;
+  i_term_l += kSpeedI * l_error;
+  i_term_l = constrain(i_term_l, kMinITerm, kMaxITerm);
+  int left_power = kSpeedOL * g_left_target_speed + kSpeedP * l_error + i_term_l;
+  left_drive = constrain(left_power / kMaxPrescaledSpeed, -1.0f, 1.0f);
+
+  int r_error = g_right_target_speed - right_speed;
+  i_term_r += kSpeedI * r_error;
+  i_term_r = constrain(i_term_r, kMinITerm, kMaxITerm);
+  int right_power = kSpeedOL * g_right_target_speed + kSpeedP * r_error + i_term_r;
+  right_drive = constrain(right_power / kMaxPrescaledSpeed, -1.0f, 1.0f);
 }
 
 void runMotors(const int speed, const Directions dir) {
