@@ -173,19 +173,20 @@ function pure_uart_handler(uart, state) {
     }
     if (parsed.id === 'maze_walls') {
       log.info(JSON.stringify(parsed));
-      if (parsed.action === 'fwd') {
-        cell.move(1);
-      } else if (parsed.action === 'left') {
-        cell.turn('l');
-      } else if (parsed.action === 'right') {
-        cell.turn('r');
-      }
+
+      if (parsed.action === 'fwd') { state.cell.move(1); }
+      else if (parsed.action === 'left') { state.cell.turn('l'); }
+      else if (parsed.action === 'right') { state.cell.turn('r'); }
+
       if (parsed.left) { state.cell.addWall('L'); }
       else { state.cell.addConnect('L'); }
+
       if (parsed.center) { state.cell.addWall('F'); }
       else { state.cell.addConnect('F'); }
+
       if (parsed.right) { state.cell.addWall('R'); }
       else { state.cell.addConnect('R'); }
+
     } else if (parsed.id === 'shooter') {
       log.info(data)
       state.num_shots += parsed.shot;
@@ -225,7 +226,7 @@ function ws_socket_handler(ws, socket) {
   });
 
   function sendCvData(data) {
-    log.info('OpenCV data received: ' + data);
+    log.verbose('OpenCV data received: ' + data);
     var msg = {};
     try {
       msg = JSON.parse(data);
