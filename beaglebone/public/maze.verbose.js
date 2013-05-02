@@ -135,7 +135,7 @@ Maze.prototype.getPath = function(x0, y0, x1, y1) {
   var path = {}
   var node_edges = [];
   while (node !== end) {
-    node_edges = node.getEdges();
+    node_edges = node.getEdgesNotWalls(this, null, null);
     for (var i = 0; i < node_edges.length; i++) {
       var next_node = node_edges[i];
       if (!path[next_node.loc]) {
@@ -143,6 +143,9 @@ Maze.prototype.getPath = function(x0, y0, x1, y1) {
         fringe.push(next_node);
       }
     }
+    fringe = Node.sort(fringe, function(a) {
+       return a.ManhattanDist(x1,y1);
+    });
     node = fringe.shift();
     if (!node) { // node is undefined if we empty the fringe
       return null;
@@ -166,7 +169,7 @@ Maze.prototype.getPathToUnknown = function(x,y) {
   var path = {}
   var node_edges = [];
   while (node.isExplored()) {
-    node_edges = node.getEdges();
+    node_edges = node.getEdgesNotWalls(this, null, null);
     for (var i = 0; i < node_edges.length; i++) {
       var next_node = node_edges[i];
       if (!path[next_node.loc]) {
@@ -244,6 +247,58 @@ Node.prototype.getEdges = function() {
   return this.edges;
 };
 
+Node.prototype.ManhattanDist = function(x, y) {
+  return Math.abs(this.loc[0] - x) + Math.abs(this.loc[1] - y);
+}
+
+// Mergesort
+Node.sort = function(list, func) {
+  if (list.length <= 1) {
+     return list;
+  }
+  var list_a = list.splice(list.length/2);
+  var a = Node.sort(list_a, func);
+  var b = Node.sort(list, func);
+  var c = [];
+  while (a.length !== 0 && b.length !== 0) {
+    if (func(a[0]) < func(b[0])) {
+      c.push(a.shift());
+    } else {
+      c.push(b.shift());
+    }
+  }
+  while (a.length !== 0) {
+    c.push(a.shift());
+  }
+  while (b.length !== 0) {
+    c.push(b.shift());
+  }
+  return c;
+}
+
+Node.prototype.getEdgesNotWalls = function(maze, x, y) {
+  var edge_list = [maze._node(this.loc[0], this.loc[1] + 1),
+                   maze._node(this.loc[0], this.loc[1] - 1),
+                   maze._node(this.loc[0] + 1, this.loc[1]),
+                   maze._node(this.loc[0] - 1, this.loc[1])];
+  if (x !== null && y !== null) {
+    // Use manhattan distance heuristic
+    edge_list = Node.sort(edge_list, function(a) {
+       return a.ManhattanDist(x,y);
+    });
+  }
+  for (var i = 0; i < edge_list.length; i++) {
+    for (var j = 0; j < this.walls.length; j++) {
+      if (edge_list[i] === this.walls[j]) {
+        // Remove node from edge_list
+        edge_list.splice(i, 1);
+        // Early end for the loop
+        break;
+      }
+    }
+  }
+  return edge_list
+}
 Node.prototype.getWalls = function() {
   return thus.walls;
 };
