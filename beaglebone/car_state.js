@@ -13,6 +13,11 @@ var CarState = function() {
   this.nav = null;
 }
 
+CarState.prototype.reset_maze = function() {
+  this.maze = new Maze()
+  this.cell = new Cell(0,0,'N',this.maze)
+}
+
 CarState.modes = ['explore', 'manual', 'navigate']
 
 // CarState.prototype = new EventEmitter();
