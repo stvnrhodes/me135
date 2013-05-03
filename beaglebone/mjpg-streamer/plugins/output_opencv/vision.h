@@ -22,6 +22,10 @@ class Vision {
   int loop(cv::Mat src);
  private:
   static const int kNumColors = 2;
+  static const int kRobotRectX = 80;
+  static const int kRobotRectY = 180;
+  static const int kRobotRectWidth = 180;
+  static const int kRobotRectHeight = 60;
   cv::Vec3b _getPixel(const cv::Mat img, const int x, const int y);
   void _thresholdImage(const cv::Mat img, const cv::Vec3b pixel, cv::Mat &output);
   int _sockfd;

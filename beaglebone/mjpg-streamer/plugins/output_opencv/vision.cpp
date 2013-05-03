@@ -81,6 +81,10 @@ int Vision::loop(cv::Mat src) {
     }
   }
 
+  // Remove car from view
+  src(cv::Rect(kRobotRectX,kRobotRectY,
+               kRobotRectWidth,kRobotRectHeight)) = cv::Scalar::all(0);
+
   std::ostringstream output_stream;
   output_stream << "{" KEY("id", "moments");
   for (int i = 0; i < kNumColors; i++) {

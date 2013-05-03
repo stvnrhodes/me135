@@ -67,6 +67,9 @@ function onLoad() {
     $('#robopath').click( mazeClick );
     $('#livefeed').click( feedClick );
 
+    $('#check-walls').click( function() { wsSend({ id:'check-walls' }) });
+    $('#reset-maze').click( function() { wsSend({ id:'reset-maze' }) });
+
     var switch_mode = function(mode) {
       return function() { wsSend({ id:'state', state:mode }); };
     };
@@ -83,10 +86,10 @@ function wsHandler() {
   return function(event) {
     var data = JSON.parse(event.data);
     if (data.id === 'encoder') {
-      $('#enc-left-number').html(data.left.toFixed(2) + " f/s");
-      $('#enc-right-number').html(data.right.toFixed(2) + " f/s");
-      enc_graph.push(data.left_encoder, 0);
-      enc_graph.push(data.right_encoder, 1);
+      $('#enc-left-number').html(data.left.toFixed(2) + " in/s");
+      $('#enc-right-number').html(data.right.toFixed(2) + " in/s");
+      enc_graph.push(data.left, 0);
+      enc_graph.push(data.right, 1);
       enc_graph.draw()
     } else if (data.id === 'maze') {
       var maze = new Maze(data.maze);

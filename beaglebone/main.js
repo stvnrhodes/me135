@@ -151,6 +151,8 @@ function pure_ws_handler(ws, state) {
         log.info("Changing mode to " + msg.state);
         state.mode = msg.state;
         state.nav = null;
+      } else if (msg.id === 'reset-maze') {
+        state.reset_maze();
       }
     }
   });
@@ -158,9 +160,9 @@ function pure_ws_handler(ws, state) {
 
 function pure_uart_handler(uart, state) {
   // Set initial claw position
-  uart.write('c' + (state.claw_pos < 10 ? '0' : '') + state.claw_pos);
+  uart.write('c' + (state.claw_pos < 10 ? '0' : '') + state.claw_pos + '\n');
   // Get initial walls
-  uart.write('w');
+  uart.write('w' +  '\n');
 
 
   uart.on('data', function (data) {
@@ -289,6 +291,13 @@ function ws_uart_handler(ws, uart, state) {
         log.info(data);
         state.nav = [msg.x, msg.y];
         var dir = state.cell.getPath(state.nav[0], state.nav[1]);
+        if (dir) {
+          uart.write('g' + dir + '\n');
+        }
+      } else if (msg.id === 'check-walls' || msg.id === 'reset-maze') {
+        uart.write('w' + '\n')
+      } else if (msg.id === 'state' && msg.state === 'explore') {
+        var dir = state.cell.getPathToUnknown();
         if (dir) {
           uart.write('g' + dir + '\n');
         }
