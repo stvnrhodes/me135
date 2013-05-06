@@ -38,8 +38,10 @@ void send_encoder(void) {
   int len = sprintf(buffer, "{" KEY("id", "encoder")
                             "," KEY("left", %f)
                             "," KEY("right", %f) "}\n",
-                            ((float)left_enc.getPulses(2)) / kClicksPerInch * kUsPerS / kSendDataTime,
-                            ((float)right_enc.getPulses(2)) / kClicksPerInch * kUsPerS / kSendDataTime);
+                            ((float)left_enc.getPulses(2)) / kClicksPerInch *
+                                                     kUsPerS / kSendDataTime,
+                            ((float)right_enc.getPulses(2)) / kClicksPerInch *
+                                                     kUsPerS / kSendDataTime);
   left_enc.reset(2);
   right_enc.reset(2);
   bone.write(buffer, len);
@@ -126,7 +128,8 @@ bool dist_control(const int final, const Directions dir) {
           if (right_ir_secondary_val < kWallDist) {
             float same_side_ir_error = right_ir_val - right_ir_secondary_val;
             if (same_side_ir_error > kStraightenSameSide) {
-              // back right ir is farther, robot is tilted to the right, need to move right side to compensate
+              // back right ir is farther, robot is tilted to the right, need
+              // to move right side to compensate
               g_left_target_speed = 0;
             } else if (same_side_ir_error < kStraightenSameSide) {
               g_right_target_speed = 0;
@@ -173,14 +176,16 @@ void speed_control(void) {
   int l_error = g_left_target_speed - left_speed;
   i_term_l += kSpeedI * l_error;
   i_term_l = constrain(i_term_l, kMinITerm, kMaxITerm);
-  int left_power = kSpeedOL * g_left_target_speed + kSpeedP * l_error + i_term_l;
+  int left_power = kSpeedOL * g_left_target_speed + kSpeedP * l_error +
+                   i_term_l;
   left_drive = constrain(left_power / kMaxPrescaledSpeed, -1.0f, 1.0f);
 
   // Do right side
   int r_error = g_right_target_speed - right_speed;
   i_term_r += kSpeedI * r_error;
   i_term_r = constrain(i_term_r, kMinITerm, kMaxITerm);
-  int right_power = kSpeedOL * g_right_target_speed + kSpeedP * r_error + i_term_r;
+  int right_power = kSpeedOL * g_right_target_speed + kSpeedP * r_error +
+                    i_term_r;
   right_drive = constrain(right_power / kMaxPrescaledSpeed, -1.0f, 1.0f);
 }
 
