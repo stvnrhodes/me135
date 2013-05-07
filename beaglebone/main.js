@@ -39,6 +39,7 @@ function makeSocket(callback) {
     log.info('server bound');
   });
   process.on( 'SIGINT', function() { socket.close(); });
+  process.on( 'SIGTERM', function() { socket.close(); });
   process.on( 'uncaughtException', function() { socket.close(); });
 }
 
