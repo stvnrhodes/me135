@@ -99,6 +99,13 @@ process.on( 'SIGINT', function() {
   process.exit();
 });
 
+// Cleanup code for when killed by system
+process.on( 'SIGTERM', function() {
+  log.warn("Kill signal recieved");
+  vision.kill();
+  process.exit();
+});
+
 // Cleanup code for exceptions
 process.on('uncaughtException', function(err) {
   log.error(err.stack);
@@ -113,7 +120,7 @@ function runServer (socket, uart) {
   app.use(express.static(__dirname + '/public'));
 
   var server = http.createServer(app);
-  server.listen(8080);
+  server.listen(80);
 
   var car_state = new CarState();
 
@@ -191,9 +198,12 @@ function pure_uart_handler(uart, state) {
       else { state.cell.addConnect('R'); }
 
       if (state.mode === 'explore') {
-        var dir = state.cell.getPathToUnknown();
+        var dir = state.explore_dir();
         if (dir) {
           uart.write('g' + dir + '\n');
+        } else if (state.grabbed) {
+          // Release the claw!
+          uart.write('c00\n');
         }
       } else if (state.mode === 'navigate' && state.nav != null) {
         var dir = state.cell.getPath(state.nav[0], state.nav[1]);
@@ -205,8 +215,11 @@ function pure_uart_handler(uart, state) {
       }
 
     } else if (parsed.id === 'shooter') {
-      log.info(data)
+      log.info(data);
       state.num_shots += parsed.shot;
+    } else if (parsed.id === 'claw') {
+      log.info(data);
+      state.grabbed = parsed.grabbed;
     }
   });
 
@@ -214,14 +227,22 @@ function pure_uart_handler(uart, state) {
 
 function pure_socket_handler(socket, state) {
   socket.on('data', function(data) {
-    var msg = {};
-    try {
-      msg = JSON.parse(data);
-    } catch(e) {
-      log.warn("Socket: " + e);
-    }
-    if (msg.id === 'color') {
-      state.color_state = msg;
+    // We sometimes get multiple websocket messages at once, so we need to
+    // split them
+    var split = data.toString().split('\n');
+    for (var i = 0; i < split.length; i++) {
+      var msg = {};
+      try {
+        // Hack so we ignore empty lines
+        if (split[i] !== '') {
+          msg = JSON.parse(split[i]);
+        }
+      } catch(e) {
+        log.warn("Socket: " + e + ', ' + split[i]);
+      }
+      if (msg.id === 'color') {
+        state.color_state = msg;
+      }
     }
   });
 }
@@ -244,19 +265,27 @@ function ws_socket_handler(ws, socket) {
 
   function sendCvData(data) {
     log.verbose('OpenCV data received: ' + data);
-    var msg = {};
-    try {
-      msg = JSON.parse(data);
-    } catch(e) {
-      log.warn("Socket: " + e);
-    }
-    if (msg.id === 'moments' || msg.id === 'color') {
-      ws.send(data, function(error) {
-        if (error) {
-          log.warn('ws: ' + error);
-          socket.removeListener('data', sendCvData);
+    // We sometimes get multiple websocket messages at once, so we need to
+    // split them
+    var split = data.toString().split('\n');
+    for (var i = 0; i < split.length; i++) {
+      var msg = {};
+      try {
+        // Hack to skip empty messages
+        if (split[i] !== '') {
+          msg = JSON.parse(split[i]);
         }
-      });
+      } catch(e) {
+        log.warn("Socket: " + e);
+      }
+      if (msg.id === 'moments' || msg.id === 'color') {
+        ws.send(split[i], function(error) {
+          if (error) {
+            log.warn('ws: ' + error);
+            socket.removeListener('data', sendCvData);
+          }
+        });
+      }
     }
   }
   socket.on('data', sendCvData);
@@ -297,7 +326,7 @@ function ws_uart_handler(ws, uart, state) {
       } else if (msg.id === 'check-walls' || msg.id === 'reset-maze') {
         uart.write('w' + '\n')
       } else if (msg.id === 'state' && msg.state === 'explore') {
-        var dir = state.cell.getPathToUnknown();
+        var dir = state.explore_dir();
         if (dir) {
           uart.write('g' + dir + '\n');
         }
