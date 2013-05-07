@@ -11,6 +11,20 @@ var CarState = function() {
   this.num_shots = 0;
   this.claw_pos = 0;
   this.nav = null;
+  this.grabbed = 0;
+}
+
+CarState.prototype.explore_dir = function() {
+  if (this.grabbed) {
+    // Force the robot to go home if it's grabbed something
+    return this.cell.getPath(0,0);
+  } else {
+    var dir = this.cell.getPathToUnknown();
+    if (!dir) {
+      dir = this.cell.getPath(0,0);
+    }
+  }
+  return dir;
 }
 
 CarState.prototype.reset_maze = function() {
@@ -19,38 +33,6 @@ CarState.prototype.reset_maze = function() {
 }
 
 CarState.modes = ['explore', 'manual', 'navigate']
-
-// CarState.prototype = new EventEmitter();
-
-// // Meant to be called from the uart event
-// CarState.prototype.update = function(data) {
-//   var parsed = {};
-//   try {
-//     parsed = JSON.parse(data);
-//   } catch(e) {
-//     // log.warn("UART is not JSON: " + e)
-//   }
-//   if (parsed.id === 'maze_walls') {
-//     // log.info(JSON.stringify(parsed));
-
-//     if (parsed.left) { this.cell.addWall('L'); }
-//     else { this.cell.addConnect('L'); }
-//     if (parsed.center) { this.cell.addWall('F'); }
-//     else { this.cell.addConnect('F'); }
-//     if (parsed.right) { this.cell.addWall('R'); }
-//     else { this.cell.addConnect('R'); }
-//     this.emit('update', {maze:this.maze, cell:this.cell});
-//     // Let's explore the maze!
-//     var dir = this.cell.getPathToUnknown()
-//     // Fixing reverse into two steps
-//     if (dir === 'b') {
-//       dir = 'l';
-//     }
-//     if (dir) {
-//       this.emit('action', dir)
-//     }
-//   }
-// }
 
 
 exports.CarState = CarState

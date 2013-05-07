@@ -109,6 +109,7 @@ function wsHandler() {
       y = data['1m01']/data['1m00'];
       color = $('#enemy-colored').css('color');
       drawCircle(x, y, Math.sqrt(data['1m00'])/20, color, canvas);
+      console.log(data['0m00']);
     } else if (data.id === 'ir') {
       $('#ir-front-number').html(data.front.toFixed(2) + " in");
       $('#ir-left-number').html(data.left.toFixed(2) + " in");
