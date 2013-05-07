@@ -19,7 +19,7 @@
 const float kIdealWallDist = 4;
 const float kFrontWallDist = 4;
 const float kWallDist = 8;
-const float kGrabbingDistance = 2.8;
+const float kGrabbingDistance = 3;
 const float kCloseEnoughToMiddle = 0.5;
 const float kStraightenSameSide = 0.1; // Minimum difference that we still straighten
 const int kDistControlLoopTime = 50000; // in us
