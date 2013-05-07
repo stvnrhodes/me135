@@ -198,6 +198,8 @@ bool dist_control(const int final, const Directions dir) {
 void speed_control(void) {
   static int i_term_l = 0;
   static int i_term_r = 0;
+  static int prev_l_error = 0;
+  static int prev_r_error = 0;
 
   int left_speed = kSpeedScaling * left_enc.getPulses(3);
   int right_speed = kSpeedScaling * right_enc.getPulses(3);
@@ -218,20 +220,23 @@ void speed_control(void) {
   i_term_l += kSpeedI * l_error;
   i_term_l = constrain(i_term_l, kMinITerm, kMaxITerm);
   int left_power = kSpeedOL * g_left_target_speed + kSpeedP * l_error +
-                   i_term_l;
+                   i_term_l + kSpeedD * (l_error - prev_l_error);
   left_drive = constrain(left_power / kMaxPrescaledSpeed, -1.0f, 1.0f);
+  prev_l_error = l_error;
 
   // Do right side
   int r_error = g_right_target_speed - right_speed;
   i_term_r += kSpeedI * r_error;
   i_term_r = constrain(i_term_r, kMinITerm, kMaxITerm);
   int right_power = kSpeedOL * g_right_target_speed + kSpeedP * r_error +
-                    i_term_r;
+                    i_term_r + kSpeedD * (r_error - prev_r_error);
   right_drive = constrain(right_power / kMaxPrescaledSpeed, -1.0f, 1.0f);
+  prev_r_error = r_error;
+
 }
 
 void runMotors(const int speed, const Directions dir) {
-//  float spd = speed / kMaxSpeed;
+  // We can go about 40 clicks a cycle
   int spd = speed / 2;
   switch (dir) {
     case FWD:  // Forwards
