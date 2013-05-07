@@ -6,7 +6,7 @@ static const int kRecockingTime = 200000; // in us
 static const int kServoTime = 20000; // in us
 static const int kServoFiring = 1400; // in us
 static const int kServoIdle = 1635; // in us
-static const int kSpinupTime = 1000000; // in us
+static const int kSpinupTime = 500000; // in us
 static const int kSpindownTime = 1000000; // in us
 
 Shooter::Shooter(PinName servo, PinName motor_fwd, PinName motor_rev):

@@ -7,7 +7,11 @@ BusOut leds(LED1, LED2, LED3, LED4);
 me135::BeagleBone bone(p9, p10);
 QEI left_enc(p11, p12);
 QEI right_enc(p13, p14);
-me135::IRSensor front_ir(p15);
+
+// Hack, should be switched in code instead of here
+me135::Sonar front_ir(p27, p30);
+me135::IRSensor sonar(p15);
+
 me135::IRSensor left_ir(p16);
 me135::IRSensor right_ir(p17);
 me135::IRSensor right_ir_secondary(p18);
@@ -15,7 +19,19 @@ me135::DriveTrain right_drive(p21, p22);
 me135::DriveTrain left_drive(p24, p23);
 me135::Shooter shooter(p28, p26, p25);
 me135::Claw claw(p29);
-me135::Sonar sonar(p27, p30);
+
+//int main(void) {
+//  // Temporary main to test sonar
+//  char buffer[64];
+//  for(;;) {
+//    int len = sprintf(buffer, "sonar:%f\r\n", sonar.read());
+//    bone.write(buffer, len);
+//    leds = sonar < kGrabbingDistance;
+//    wait(.2);
+//
+//  }
+//  return 1;
+//}
 
 volatile int g_left_target_speed = 0;
 volatile int g_right_target_speed = 0;
@@ -82,6 +98,8 @@ void send_claw_pos(const float claw_pos, const bool grabbed) {
 
 bool dist_control(const int final, const Directions dir) {
   int dist;
+  static float last_right;
+  static float last_left;
   if (dir == FWD) {
     dist = min(left_enc.getPulses(0), right_enc.getPulses(0));
   } else if (dir == LEFT) {
@@ -96,7 +114,7 @@ bool dist_control(const int final, const Directions dir) {
   int target = kDistPNumerator * error / kDistPDenominator + kDistOL;
 
   // Early return if going forwards and we hit a wall
-  if (front_ir < kFrontWallDist) {
+  if (dir == FWD && front_ir < kFrontWallDist) {
     g_left_target_speed = 0;
     g_right_target_speed = 0;
     return true;
@@ -121,6 +139,26 @@ bool dist_control(const int final, const Directions dir) {
       // Check if we have walls on both sides
       if (left_ir_val < kWallDist && right_ir_val < kWallDist) {
         float ir_error = left_ir_val - right_ir_val;
+        // Look at derivative, try to change steering so it's oriented towards center
+        if (last_left < kWallDist) {
+          int straighten = (int) kStraightenD * (left_ir_val - kIdealWallDist);
+          if (left_ir_val > last_left) {
+            // We're moving away from the left wall, turn towards it if we're too far
+            g_left_target_speed -= straighten;
+          } else {
+            g_left_target_speed += straighten;
+          }
+        }
+        if (last_right < kWallDist) {
+          int straighten = (int) kStraightenD * (right_ir_val - kIdealWallDist);
+          if (right_ir_val > last_right) {
+            // We're moving away from the left wall, turn towards it if we're too far and away if we're too close
+            g_right_target_speed -= straighten;
+          } else {
+            g_right_target_speed += straighten;
+          }
+        }
+
         if (abs(ir_error) < kCloseEnoughToMiddle) {
           // Straighten robot, if possible
           // Do this by shutting off one side
@@ -142,6 +180,9 @@ bool dist_control(const int final, const Directions dir) {
           g_right_target_speed += straighten;
         }
       }
+      // Update last left/right
+      last_left = 0.8*last_left + 0.2*left_ir_val;
+      last_right = 0.8 * last_right + 0.2*right_ir_val;
     }
     return false;
   } else {

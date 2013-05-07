@@ -16,9 +16,10 @@
 #include "Sonar.h"
 #include "QEI.h"
 
-const float kFrontWallDist = 2.8;
+const float kIdealWallDist = 4;
+const float kFrontWallDist = 4;
 const float kWallDist = 8;
-const float kGrabbingDistance = 3;
+const float kGrabbingDistance = 2.8;
 const float kCloseEnoughToMiddle = 0.5;
 const float kStraightenSameSide = 0.1; // Minimum difference that we still straighten
 const int kDistControlLoopTime = 50000; // in us
@@ -29,10 +30,11 @@ const int kSendDataTime = 200000; // in us, time between sending graph data
 const int kQuarterCircle = 390;
 const int kUsPerS = 1000000;
 const int kSpeedScaling = 1;
-const int kSpeedI = 10;
+const int kSpeedI = 0;
 const int kSpeedOL = 60;
 const int kSpeedP = 60;
-const float kStraighten = 5;
+const float kStraighten = 3;
+const float kStraightenD = 30;
 const int kDistPNumerator = 0;//1000;
 const int kDistPDenominator = 10000;
 const int kDistOL = 20;

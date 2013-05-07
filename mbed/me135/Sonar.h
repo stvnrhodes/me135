@@ -32,14 +32,14 @@ class Sonar {
   void get_(void);
   void on_rise_(void);
   void on_fall_(void);
-  static const int kReadTime = 10000; // in us
-  static const int kTrigTime = 3; // in us
-  static const float kSonicToIn = 1 / 148;
+  static const int kReadTime = 500000; // in us
+  static const int kTrigTime = 5; // in us
+  static const float kSonicToIn = 1.0f / 148.0f;
   DigitalOut trig_;
   InterruptIn echo_;
   volatile float average_;
   Timer timer_;
-  Ticker ticker_;
+  Timeout ticker_;
 };
 
 }

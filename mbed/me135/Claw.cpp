@@ -3,7 +3,7 @@ namespace me135{
 
 
 Claw::Claw(PinName servo) : pin_(servo) {
-  write(0.5);
+  write(0.1);
   ticker_.attach_us(this, &Claw::on_, kServoTime);
 }
 
