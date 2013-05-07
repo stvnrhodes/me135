@@ -17,12 +17,15 @@ var CarState = function() {
 }
 
 CarState.prototype.explore_dir = function() {
-  var dir = this.cell.getPathToUnknown();
-  console.log(dir);
-  if (!dir) {
-    dir = this.cell.getPath(0,0);
+  if (this.grabbed) {
+    return this.cell.getPath(0,0);
+  } else {
+    var dir = this.cell.getPathToUnknown();
+    if (!dir) {
+      dir = this.cell.getPath(0,0);
+    }
+    return dir;
   }
-  return dir;
 }
 
 CarState.prototype.reset_maze = function() {
