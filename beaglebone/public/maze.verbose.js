@@ -282,7 +282,6 @@ Node.prototype.getEdgesNotWalls = function(maze, x, y) {
                    maze._node(this.loc[0] + 1, this.loc[1]),
                    maze._node(this.loc[0] - 1, this.loc[1])];
   var trimmed_list = [];
-  debugger;
   for (var i = 0; i < edge_list.length; i++) {
     if (this.walls.indexOf(edge_list[i]) === -1) {
       trimmed_list.push(edge_list[i])
