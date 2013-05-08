@@ -12,6 +12,7 @@ var CarState = function() {
   this.claw_pos = 0;
   this.nav = null;
   this.grabbed = 0;
+  this.shoot_mode = false;
 }
 
 CarState.prototype.explore_dir = function() {

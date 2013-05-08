@@ -152,6 +152,8 @@ function pure_ws_handler(ws, state) {
   ws.send(JSON.stringify(msg));
   msg = { id:'maze', maze: state.maze.getData(), cell: state.cell.getData() };
   ws.send(JSON.stringify(msg));
+  msg = { id:'shoot-mode', mode:state.shoot_mode };
+  ws.send(JSON.stringify(msg));
   ws.on('message', function(data, flags) {
     if (!flags.binary) {
       var msg = JSON.parse(data);
@@ -161,6 +163,8 @@ function pure_ws_handler(ws, state) {
         state.nav = null;
       } else if (msg.id === 'reset-maze') {
         state.reset_maze();
+      } else if (msg.id === 'shoot-mode') {
+        state.shoot_mode = msg.mode;
       }
     }
   });
