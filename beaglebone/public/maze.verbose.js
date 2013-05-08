@@ -408,7 +408,6 @@ Cell.prototype.addConnect = function(dir) {
 Cell.prototype.getPath = function(x,y) {
   // TODO: Benchmark, see if it's too slow when ran a lot
   var path = this.maze.getPath(this.x, this.y, x, y);
-  console.log(path);
   if (path === null) {
     return null;
   }
