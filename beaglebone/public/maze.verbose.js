@@ -281,24 +281,16 @@ Node.prototype.getEdgesNotWalls = function(maze, x, y) {
                    maze._node(this.loc[0], this.loc[1] - 1),
                    maze._node(this.loc[0] + 1, this.loc[1]),
                    maze._node(this.loc[0] - 1, this.loc[1])];
-  if (x !== null && y !== null) {
-    // Use manhattan distance heuristic
-    edge_list = Node.sort(edge_list, function(a) {
-       return a.ManhattanDist(x,y);
-    });
-  }
+  var trimmed_list = [];
+  debugger;
   for (var i = 0; i < edge_list.length; i++) {
-    for (var j = 0; j < this.walls.length; j++) {
-      if (edge_list[i] === this.walls[j]) {
-        // Remove node from edge_list
-        edge_list.splice(i, 1);
-        // Early end for the loop
-        break;
-      }
+    if (this.walls.indexOf(edge_list[i]) === -1) {
+      trimmed_list.push(edge_list[i])
     }
   }
-  return edge_list
+  return trimmed_list;
 }
+
 Node.prototype.getWalls = function() {
   return thus.walls;
 };
@@ -417,6 +409,7 @@ Cell.prototype.addConnect = function(dir) {
 Cell.prototype.getPath = function(x,y) {
   // TODO: Benchmark, see if it's too slow when ran a lot
   var path = this.maze.getPath(this.x, this.y, x, y);
+  console.log(path);
   if (path === null) {
     return null;
   }
