@@ -127,7 +127,7 @@ function runServer (socket, uart) {
 
   pure_uart_handler(uart, car_state);
   pure_socket_handler(socket, car_state);
-  uart_socket_handler(uart, socket);
+  uart_socket_handler(uart, socket, car_state);
 
   var wss = new WebSocketServer({server: server});
   wss.on('connection', function (ws) {
@@ -225,6 +225,9 @@ function pure_uart_handler(uart, state) {
     } else if (parsed.id === 'claw') {
       log.info(data);
       state.grabbed = parsed.grabbed;
+    } else if (parsed.id === 'ir') {
+      // We only grab the claw ir because we use it to know when to shoot
+      state.claw_ir = parsed.claw;
     }
   });
 
@@ -296,8 +299,37 @@ function ws_socket_handler(ws, socket) {
   socket.on('data', sendCvData);
 }
 
-function uart_socket_handler(uart, socket) {
-
+function uart_socket_handler(uart, socket, state) {
+  socket.on('data', function(data) {
+    // We sometimes get multiple websocket messages at once, so we need to
+    // split them
+    var split = data.toString().split('\n');
+    for (var i = 0; i < split.length; i++) {
+      var msg = {};
+      try {
+        // Hack so we ignore empty lines
+        if (split[i] !== '') {
+          msg = JSON.parse(split[i]);
+        }
+      } catch(e) {
+        log.warn("Socket: " + e + ', ' + split[i]);
+      }
+      // Hardcoded numbers, should be made into constants
+      if (state.shoot_mode && msg.id === 'moments' &&
+          msg['1m00'] > 8000) {
+        var x = msg['1m10']/msg['1m00'];
+        if (Math.abs(160-x) < 30) {
+          var y = msg['1m01']/msg['1m00'];
+          var approx_dist = -0.0007*y*y + 0.0737*y + 7.8922;
+          if (Math.abs(state.claw_ir - approx_dist) < 2) {
+            log.info("Fire!!!")
+            uart.write('s' + '\n');
+          }
+        }
+        state.color_state = msg;
+      }
+    }
+  });
 }
 
 function ws_uart_handler(ws, uart, state) {
