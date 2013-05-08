@@ -16,10 +16,10 @@
 #include "Sonar.h"
 #include "QEI.h"
 
-const float kIdealWallDist = 4;
+const float kIdealWallDist = 3.6;
 const float kFrontWallDist = 4;
 const float kWallDist = 8;
-const float kGrabbingDistance = 3;
+const float kGrabbingDistance = 2.8;
 const float kCloseEnoughToMiddle = 0.5;
 const float kStraightenSameSide = 0.1; // Minimum difference that we still straighten
 const int kDistControlLoopTime = 50000; // in us
@@ -31,14 +31,15 @@ const int kQuarterCircle = 390;
 const int kUsPerS = 1000000;
 const int kSpeedScaling = 1;
 const int kSpeedI = 1;
-const int kSpeedOL = 10;
+const int kSpeedOL = 20;
 const int kSpeedP = 20;
 const int kSpeedD = 2;
-const float kStraighten = 3;
-const float kStraightenD = 30;
+const float kStraighten = 0;
+const float kStraightenD = 5.0;
 const int kDistPNumerator = 0;//1000;
 const int kDistPDenominator = 10000;
 const int kDistOL = 20;
+const int kTurnOL = 35;
 const int kMaxITerm = 1000;
 const int kMinITerm = -1000;
 const int kClicksPerInch = 42;
