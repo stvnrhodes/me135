@@ -2,7 +2,8 @@
 if (!window.WebSocket) {
   alert("WebSocket NOT supported by your Browser! This whole thing's gonna fail");
 }
-var host = window.document.location.host.replace(/:.*/, '');
+var host = window.document.location.host
+var domain = host.replace(/:.*/, '');
 var ws;
 
 // Convenience function so we don't keep writing JSON.stringify
@@ -12,14 +13,10 @@ function wsSend(msg) {
 
 // Main function
 function onLoad() {
-  if (host.match(/([0-9]+\.){3}[0-9]+/)) {
-    ws = new WebSocket('ws://' + host + ':8080');
-  } else {
-    ws = new WebSocket('ws://' + host);
-  }
+  ws = new WebSocket('ws://' + host);
   ws.onmessage = wsHandler();
   var speed = 50;
-  $('#livefeed').css('background-image','url(\'http://' + host +
+  $('#livefeed').css('background-image','url(\'http://' + domain +
       ':8081/?action=stream\')');
   $('#speed').html(speed);
   ws.onopen = function() {
@@ -109,7 +106,6 @@ function wsHandler() {
       y = data['1m01']/data['1m00'];
       color = $('#enemy-colored').css('color');
       drawCircle(x, y, Math.sqrt(data['1m00'])/20, color, canvas);
-      console.log(data['0m00']);
     } else if (data.id === 'ir') {
       $('#ir-front-number').html(data.front.toFixed(2) + " in");
       $('#ir-left-number').html(data.left.toFixed(2) + " in");

@@ -15,14 +15,10 @@ var CarState = function() {
 }
 
 CarState.prototype.explore_dir = function() {
-  if (this.grabbed) {
-    // Force the robot to go home if it's grabbed something
-    return this.cell.getPath(0,0);
-  } else {
-    var dir = this.cell.getPathToUnknown();
-    if (!dir) {
-      dir = this.cell.getPath(0,0);
-    }
+  var dir = this.cell.getPathToUnknown();
+  console.log(dir);
+  if (!dir) {
+    dir = this.cell.getPath(0,0);
   }
   return dir;
 }
