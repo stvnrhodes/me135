@@ -70,6 +70,10 @@ body {
   color: #2098d0;
 }
 
+#sidebar span#ir-claw-label{
+  color: #ea8825;
+}
+
 #sidebar span#enc-left-label{
   color: #ba6fe7;
 }
@@ -96,6 +100,10 @@ body {
 
 #ir-right-number{
     box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #2098d0, 0 1px 0px #333;
+}
+
+#ir-claw-number{
+    box-shadow: inset 0 1px 1px #000, inset 10px 0px 0 #ea8825, 0 1px 0px #333;
 }
 
 #enc-left-number{
