@@ -9,11 +9,6 @@ Maze = function(m) {
 };
 
 Maze.prototype._parseAndAdd = function(maze_data) {
-  // for (i = 0; i < maze_data.maze.length; i++) {
-  //   for (j = 0; j < maze_data.maze[i].length; j++) {
-  //     this._node(i-maze_data.x0,j-maze_data.y0);
-  //   }
-  // }
   for (i = 0; i < maze_data.maze.length; i++) {
     for (j = 0; j < maze_data.maze[i].length; j++) {
       this._node(i+maze_data.x0,j+maze_data.y0)

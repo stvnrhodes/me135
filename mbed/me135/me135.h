@@ -18,7 +18,7 @@
 
 const float kIdealWallDist = 3.6;
 const float kFrontWallDist = 4;
-const float kWallDist = 8;
+const float kWallDist = 6;
 const float kGrabbingDistance = 2.8;
 const float kCloseEnoughToMiddle = 0.5;
 const float kStraightenSameSide = 0.1; // Minimum difference that we still straighten
